@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @Hi-Acaree or Aryan from Acaree
-- 👀 I’m interested in building to better the world
-- 🌱 I’m currently learning human psychology & behavior
-- 💞️ I’m looking to collaborate on building to better the world
+- 👀 I’m interested in building software that have the potential to change the world
+- 🌱 I’m currently diving deep into helping healthcare 
+- 💞️ I’m looking to collaborate to build a better world
 - 📫 How to reach me LinkedIn.com/in/iamaaryan
 
 <!---
