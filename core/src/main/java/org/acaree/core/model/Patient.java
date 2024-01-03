@@ -1,2 +1,6 @@
-package org.acaree.core.model;public class Patient {
+package org.acaree.core.model;
+
+public class Patient {
+
+
 }

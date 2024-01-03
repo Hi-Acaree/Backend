@@ -1,2 +1,4 @@
-package org.acaree.core.model;public class Appointment {
+package org.acaree.core.model;
+
+public class Appointment {
 }
