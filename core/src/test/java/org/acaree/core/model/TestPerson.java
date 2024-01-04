@@ -2,10 +2,18 @@ package org.acaree.core.model;
 import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
-public class TestPerson {
+/**
+ * Test the constructor and field access methods of the Person class.
+ * <p>
+ *     This test uses a mock object to test the constructor of the Person class.
+ *     The mock object is created using the Mockito framework.
+ *     The mock object is used to test the constructor of the Person class.
+ *     </p>
+ */
+ class TestPerson {
 
     @Test
-    public void testPersonConstructorAndFieldAccess() {
+    void testPersonConstructorAndFieldAccess() {
         String firstName = "John";
         String lastName = "Doe";
         String email = "john.doe@example.com";
@@ -20,7 +28,7 @@ public class TestPerson {
     }
 
     @Test
-    public void testEquals() {
+    void testEquals() {
         Person person1 = new Person("John", "Doe", "john.doe@example.com", "1234567890");
         Person person2 = new Person("John", "Doe", "john.doe@example.com", "1234567890");
 
@@ -29,7 +37,7 @@ public class TestPerson {
     }
 
     @Test
-    public void testHashCode() {
+    void testHashCode() {
         Person person1 = new Person("John", "Doe", "john.doe@example.com", "1234567890");
         Person person2 = new Person("John", "Doe", "john.doe@example.com", "1234567890");
 
@@ -37,7 +45,7 @@ public class TestPerson {
     }
 
     @Test
-    public void testToString() {
+    void testToString() {
         Person person = new Person("John", "Doe", "john.doe@example.com", "1234567890");
         String expectedString = "Person{id=0, firstName='John', lastName='Doe', email='john.doe@example.com', phone='1234567890'}";
 

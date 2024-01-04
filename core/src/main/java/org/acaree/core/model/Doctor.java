@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.acaree.core.util.Helper;
 
 import java.util.Objects;
 
@@ -28,6 +29,7 @@ public class Doctor {
     private Long id; // Primary key
 
     @OneToOne
+    @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person personDetails; // Person object
 
     private String specialization;
@@ -45,29 +47,32 @@ public class Doctor {
 
     //== methods ==
 
+    // equals and hashCode methods are overridden to compare two Doctor objects
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Doctor)) return false;
         Doctor doctor = (Doctor) o;
 
-        return Objects.equals(id, doctor.id) &&
-                Objects.equals(personDetails, doctor.personDetails) &&
-                Objects.equals(specialization, doctor.specialization) &&
-                Objects.equals(hospitalName, doctor.hospitalName) &&
-                Objects.equals(departmentName, doctor.departmentName);
+        return Helper.generateBusinessKey(personDetails).equals(Helper.generateBusinessKey(doctor.personDetails));
     }
-
-
-    /**
-     * Overridden equals method to compare two Doctor objects.
-     * @return boolean true if the objects are equal, false otherwise.
-     */
-
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, personDetails, specialization, hospitalName, departmentName);
+        return Objects.hash(Helper.generateBusinessKey(personDetails));
+    }
+
+    @Override
+    public String toString() {
+        return "Doctor{" + "id=" + id +
+                ", doctorName=" + personDetails.getFirstName() + " " + personDetails.getLastName() +
+                ", email=" + personDetails.getEmail() +
+                ", phone=" + personDetails.getPhone() +
+                ", specialization='" + specialization + '\'' +
+                ", hospitalName='" + hospitalName + '\'' +
+                ", departmentName='" + departmentName + '\'' +
+                '}';
     }
 }
 
