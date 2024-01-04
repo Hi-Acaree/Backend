@@ -28,7 +28,7 @@ public class Doctor {
     private Long id; // Primary key
 
     @OneToOne
-    private Person personDetails; // Assuming Person is an entity
+    private Person personDetails; // Person object
 
     private String specialization;
     private String hospitalName;
