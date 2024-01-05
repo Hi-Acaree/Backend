@@ -10,8 +10,7 @@ import org.acaree.core.util.Helper;
 import java.util.Objects;
 
 @Entity
-@Getter
-@Setter
+@Getter @Setter
 @NoArgsConstructor
 @Slf4j
 public class Patient {

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 /**
@@ -27,17 +28,21 @@ public class AppointmentTest {
         // Arrange
         Patient patient = new Patient(); // Assuming Patient is properly instantiated
         Doctor doctor = new Doctor();   // Assuming Doctor is properly instantiated
-        LocalDate date = LocalDate.now();
-        LocalTime time = LocalTime.now();
+        TimeSlot timeSlot = new TimeSlot();
+        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
+        timeSlot.setStartTime(startTime);
+        timeSlot.setEndTime(endTime);
+
 
         // Act
-        Appointment appointment = new Appointment(patient, doctor, date, time, "General Checkup");
+        Appointment appointment = new Appointment(patient, doctor , "General Checkup", timeSlot);
 
         // Assert
         assertEquals(patient, appointment.getPatient());
         assertEquals(doctor, appointment.getDoctor());
-        assertEquals(date, appointment.getDate());
-        assertEquals(time, appointment.getTime());
+        assertEquals(startTime, appointment.getTimeSlot().getStartTime());
+        assertEquals(endTime, appointment.getTimeSlot().getEndTime());
         assertEquals("General Checkup", appointment.getReason());
     }
 
@@ -46,11 +51,14 @@ public class AppointmentTest {
         // Arrange
         Patient patient = new Patient();
         Doctor doctor = new Doctor();
-        LocalDate date = LocalDate.now();
-        LocalTime time = LocalTime.now();
+        TimeSlot timeSlot = new TimeSlot();
+        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
+        timeSlot.setStartTime(startTime);
+        timeSlot.setEndTime(endTime);
 
-        Appointment appointment1 = new Appointment(patient, doctor, date, time, "Checkup");
-        Appointment appointment2 = new Appointment(patient, doctor, date, time, "Checkup");
+        Appointment appointment1 = new Appointment(patient, doctor, "Checkup", timeSlot);
+        Appointment appointment2 = new Appointment(patient, doctor, "Checkup", timeSlot);
 
         // Act & Assert
         assertEquals(appointment1, appointment2);
@@ -63,14 +71,16 @@ public class AppointmentTest {
         // Arrange
         Patient mockPatient = mock(Patient.class);
         Doctor mockDoctor = mock(Doctor.class);
-        LocalDate date = LocalDate.of(2020, 1, 1); // Fixed date
-        LocalTime time = LocalTime.of(12, 0);      // Fixed time
+        TimeSlot mockTimeSlot = mock(TimeSlot.class);
+        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
+        when(mockTimeSlot.getStartTime()).thenReturn(startTime);
+        when(mockTimeSlot.getEndTime()).thenReturn(endTime);
 
         when(mockPatient.toString()).thenReturn("MockPatient");
         when(mockDoctor.toString()).thenReturn("MockDoctor");
-
-        Appointment appointment = new Appointment(mockPatient, mockDoctor, date, time, "Checkup");
-        String expectedString = "Appointment{id=0, patient=MockPatient, doctor=MockDoctor, date=" + date + ", time=" + time + ", reason='Checkup'}";
+        Appointment appointment = new Appointment(mockPatient, mockDoctor, "Checkup", mockTimeSlot);
+        String expectedString = "Appointment{id=0, patient=MockPatient, doctor=MockDoctor, startTime=" + startTime + ", endTime=" + endTime + ", reason='Checkup'}";
 
         // Act & Assert
         assertEquals(expectedString, appointment.toString());

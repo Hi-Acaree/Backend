@@ -2,6 +2,7 @@ package org.acaree.core.util;
 
 import org.acaree.core.model.Appointment;
 import org.acaree.core.model.Person;
+import org.acaree.core.model.TimeSlot;
 
 import javax.validation.constraints.NotNull;
 import java.time.format.DateTimeFormatter;
@@ -36,18 +37,18 @@ public class Helper {
 
 
     public static String generateBusinessKey(@NotNull Appointment appointment) {
-        // Formatting the date and time separately
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+        // Formatting the time separately
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmm");
 
         String patientId = appointment.getPatient() != null ? String.valueOf(appointment.getPatient().getId()) : "null";
         String doctorId = appointment.getDoctor() != null ? String.valueOf(appointment.getDoctor().getId()) : "null";
 
         // Formatting date and time
-        String date = appointment.getDate() != null ? appointment.getDate().format(dateFormatter) : "null";
-        String time = appointment.getTime() != null ? appointment.getTime().format(timeFormatter) : "null";
+        TimeSlot timeSlot = appointment.getTimeSlot();
+        String startTime = timeSlot != null ? timeSlot.getStartTime().format(timeFormatter) : "null";
+        String endTime = timeSlot != null ? timeSlot.getEndTime().format(timeFormatter) : "null";
 
-        return patientId + "_" + doctorId + "_" + date + "_" + time;
+        return patientId + "_" + doctorId + "_" + startTime + "_" + endTime;
     }
 
 

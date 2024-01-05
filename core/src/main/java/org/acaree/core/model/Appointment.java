@@ -43,26 +43,21 @@ public class Appointment {
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
 
-    private LocalDate date;
-    private LocalTime time;
+    @ManyToOne
+    @JoinColumn(name = "time_slot_id")
+    private TimeSlot timeSlot;
+
     private String reason;
 
-    public Appointment(long id, Patient patient, Doctor doctor, LocalDate date, LocalTime time, String reason) {
-        this.id = id;
+    private boolean booked;
+
+    public Appointment(Patient patient, Doctor doctor, String reason, TimeSlot timeSlot) {
         this.patient = patient;
         this.doctor = doctor;
-        this.date = date;
-        this.time = time;
         this.reason = reason;
+        this.timeSlot = timeSlot;
     }
 
-    public Appointment(Patient patient, Doctor doctor, LocalDate date, LocalTime time, String reason) {
-        this.patient = patient;
-        this.doctor = doctor;
-        this.date = date;
-        this.time = time;
-        this.reason = reason;
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -83,10 +78,9 @@ public class Appointment {
                 "id=" + id +
                 ", patient=" + (patient != null ? patient.toString() : "null") +
                 ", doctor=" + (doctor != null ? doctor.toString() : "null") +
-                ", date=" + (date != null ? date.toString() : "null") +
-                ", time=" + (time != null ? time.toString() : "null") +
+                ", startTime=" + (timeSlot != null ? timeSlot.getStartTime().toString() : "null") +
+                ", endTime=" + (timeSlot != null ? timeSlot.getEndTime().toString() : "null") +
                 ", reason='" + (reason != null ? reason : "null") + '\'' +
                 '}';
     }
-
 }
