@@ -1,5 +1,7 @@
 package org.acaree.core.service;
-
+import org.acaree.core.exceptions.AppointmentBookingException;
+import org.acaree.core.exceptions.BookingCancelException;
+import org.acaree.core.exceptions.TimeSlotAvailabilityException;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.AppointmentRepository;
 import org.acaree.core.repository.DoctorRepository;
@@ -13,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,8 +23,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * AppointmentServiceTest is a test class for AppointmentService.
- *
+ * Test class for the AppointmentService class.
+ * <p> This class is used to test the AppointmentService class. </p>
+ * <p>This class tests for appointment booking timeSlot availability</p>
+ * <p>This class tests for appointment booking success</p>
+ * <p>This class tests for appointment booking failure</p>
+ * <p>This class tests for appointment booking failure due to timeSlot availability</p>
  */
 
 @ExtendWith(MockitoExtension.class)
@@ -46,6 +53,7 @@ class AppointmentServiceTest {
     private Patient patient;
     private Doctor doctor;
     private TimeSlot timeSlot;
+
 
     @BeforeEach
     void setUp() {
@@ -81,32 +89,20 @@ class AppointmentServiceTest {
         appointment.setReason("Test");
         appointment.setId(1L);
 
-
-        // Mock the behavior for an available time slot
-        when(timeSlotRepository.findAvailableTimeSlot(1L)).thenAnswer(invocation -> {
-            timeSlot.setBooked(false);
-            return Optional.of(timeSlot);
-        });
-
-        // Mock the behavior for a time slot that becomes booked after calling the method
-        doAnswer(invocation -> {
-            timeSlot.setBooked(true);
-            return null;
-        }).when(timeSlotRepository).save(any(TimeSlot.class));
-
-
-        when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
-        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
-       when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> {
-        Appointment savedAppointment = invocation.getArgument(0);
-        return savedAppointment;
-});
-
     }
 
     @Test
-    void testBookAppointment_Success() throws Exception {
-        // Arrange (setup is done in setUp method)
+    void testBookAppointment_Success() {
+        // Arrange
+
+        when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> {
+            Appointment savedAppointment = invocation.getArgument(0);
+            return savedAppointment;
+        });
+
+        when(timeSlotRepository.findAvailableTimeSlot(1L)).thenReturn(Optional.of(timeSlot));
 
         // Act
         Appointment returnedAppointment = appointmentService.bookAppointment(1L, 2L, "Test", 1L);
@@ -123,6 +119,172 @@ class AppointmentServiceTest {
         assertTrue(returnedAppointment.getTimeSlot().isBooked());
         verify(timeSlotRepository).save(returnedAppointment.getTimeSlot());
     }
+
+
+    @Test
+    void testBookAppointment_TimeSlotUnavailable() {
+        // Arrange - Mock the behavior for found patient and doctor
+        when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+
+        // Mock the behavior for an unavailable time slot
+        when(timeSlotRepository.findAvailableTimeSlot(1L)).thenReturn(Optional.empty());
+
+        // Act and Assert - Expect a TimeSlotAvailabilityException to be thrown
+        assertThrows(TimeSlotAvailabilityException.class, () -> {
+            appointmentService.bookAppointment(1L, 2L, "Test", 1L);
+        });
+    }
+
+ @Test
+void testUpdateAppointment_Success() {
+    // Arrange
+
+        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
+
+
+     // Set up a different time slot for testing the change scenario
+     TimeSlot newTimeSlot = new TimeSlot();
+     newTimeSlot.setStartTime(startTime);
+     newTimeSlot.setEndTime(endTime);
+     newTimeSlot.setId(2L); // Different ID for the new time slot
+     newTimeSlot.setBooked(false); // Make sure the new time slot is available
+
+
+    AppointmentService.AppointmentUpdateDTO updateDTO = new AppointmentService.AppointmentUpdateDTO(1L,"Updated reason", 2L, 2L, 1L, true);
+    when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
+    when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
+    when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+    when(timeSlotRepository.findById(2L)).thenReturn(Optional.of(newTimeSlot));
+    when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+    // Act
+    Appointment returnedAppointment = appointmentService.updateAppointment(updateDTO);
+
+    // Assert
+    assertNotNull(returnedAppointment);
+    assertEquals("Updated reason", returnedAppointment.getReason());
+    assertEquals(1L, returnedAppointment.getDoctor().getPersonDetails().getId());
+    assertEquals(2L, returnedAppointment.getPatient().getPersonDetails().getId());
+    assertEquals(2L, returnedAppointment.getTimeSlot().getId());
+    assertTrue(returnedAppointment.isBooked());
+}
+
+
+    @Test
+    void testCancelAppointment_Success() {
+        // Arrange
+        long appointmentId = 1L;
+        appointment.setBooked(true); // Ensure the appointment is initially booked
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+
+        // Act
+        boolean result = appointmentService.cancelAppointment(appointmentId);
+
+        // Assert
+        assertTrue(result);
+        assertFalse(appointment.isBooked()); // Appointment should be marked as not booked
+        verify(appointmentRepository).save(appointment); // Verify appointment is saved
+        verify(timeSlotRepository).save(appointment.getTimeSlot()); // Verify time slot is freed
+    }
+
+    @Test
+    void testCancelAppointment_InvalidId() {
+        // Arrange
+        long invalidAppointmentId = -1L;
+
+        // Act & Assert
+        assertThrows(AppointmentBookingException.class, () -> appointmentService.cancelAppointment(invalidAppointmentId));
+    }
+
+    @Test
+    void testCancelAppointment_AppointmentNotFound() {
+        // Arrange
+        long nonExistentAppointmentId = 2L;
+        when(appointmentRepository.findById(nonExistentAppointmentId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(AppointmentBookingException.class, () -> appointmentService.cancelAppointment(nonExistentAppointmentId));
+    }
+
+    @Test
+    void testCancelAppointment_AlreadyCanceled() {
+        // Arrange
+        long appointmentId = 1L;
+        appointment.setBooked(false); // Appointment is already not booked
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+
+        // Act & Assert
+        assertThrows(BookingCancelException.class, () -> appointmentService.cancelAppointment(appointmentId));
+    }
+
+    @Test
+    void testGetAppointmentById_Success() {
+        // Arrange
+        long appointmentId = 1L;
+        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
+
+        // Act
+        Appointment returnedAppointment = appointmentService.getAppointment(appointmentId);
+
+        // Assert
+        assertNotNull(returnedAppointment);
+        assertEquals(appointmentId, returnedAppointment.getId());
+    }
+
+    @Test
+    void testGetAppointmentById_InvalidId() {
+        // Arrange
+        long invalidAppointmentId = -1L;
+
+        // Act & Assert
+        assertThrows(AppointmentBookingException.class, () -> appointmentService.getAppointment(invalidAppointmentId));
+    }
+
+    @Test
+    void testGetAllAppointment_Success() {
+        // Arrange
+        when(appointmentRepository.findAll()).thenReturn(List.of(appointment));
+
+        // Act
+        List<Appointment> returnedAppointment = appointmentService.getAllAppointments();
+
+        // Assert
+        assertNotNull(returnedAppointment);
+        assertEquals(1, returnedAppointment.size());
+    }
+
+    @Test
+    void testGetAllAppointmentByDoctorId_Success() {
+        // Arrange
+        when(appointmentRepository.findDoctorAppointment(1L)).thenReturn(List.of(appointment));
+
+        // Act
+        List<Appointment> returnedAppointment = appointmentService.getAllAppointmentsByDoctorId(1L);
+
+        // Assert
+        assertNotNull(returnedAppointment);
+        assertEquals(1, returnedAppointment.size());
+        assertEquals(1L, returnedAppointment.get(0).getDoctor().getPersonDetails().getId());
+        assertEquals(2L, returnedAppointment.get(0).getPatient().getPersonDetails().getId());
+    }
+
+    @Test
+    void testGetAllAppointmentByPatientId_Success() {
+        // Arrange
+        when(appointmentRepository.findPatientAppointment(2L)).thenReturn(List.of(appointment));
+
+        // Act
+        List<Appointment> returnedAppointment = appointmentService.getAllAppointmentsByPatientId(2L);
+
+        // Assert
+        assertNotNull(returnedAppointment);
+        assertEquals(1, returnedAppointment.size());
+        assertEquals(1L, returnedAppointment.get(0).getDoctor().getPersonDetails().getId());
+        assertEquals(2L, returnedAppointment.get(0).getPatient().getPersonDetails().getId());
+    }
+
 
 
 

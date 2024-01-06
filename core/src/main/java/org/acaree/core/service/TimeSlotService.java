@@ -24,8 +24,8 @@ public class TimeSlotService {
          log.info("Time slot available: {}", timeSlot);
          return timeSlot;
      } else {
-         new TimeSlotAvailabilityException("Time slot not available");
-         return Optional.empty();
+         throw new TimeSlotAvailabilityException("Time slot not available");
+
      }
     }
 
