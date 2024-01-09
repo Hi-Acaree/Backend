@@ -28,11 +28,10 @@ public class AppointmentTest {
         // Arrange
         Patient patient = new Patient(); // Assuming Patient is properly instantiated
         Doctor doctor = new Doctor();   // Assuming Doctor is properly instantiated
-        TimeSlot timeSlot = new TimeSlot();
+
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
-        timeSlot.setStartTime(startTime);
-        timeSlot.setEndTime(endTime);
+        TimeSlot timeSlot = new TimeSlot(startTime, endTime, false);
 
 
         // Act
@@ -51,11 +50,10 @@ public class AppointmentTest {
         // Arrange
         Patient patient = new Patient();
         Doctor doctor = new Doctor();
-        TimeSlot timeSlot = new TimeSlot();
+
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
-        timeSlot.setStartTime(startTime);
-        timeSlot.setEndTime(endTime);
+        TimeSlot timeSlot = new TimeSlot(startTime, endTime, false);
 
         Appointment appointment1 = new Appointment(patient, doctor, "Checkup", timeSlot);
         Appointment appointment2 = new Appointment(patient, doctor, "Checkup", timeSlot);

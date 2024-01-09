@@ -20,7 +20,5 @@ import java.util.Optional;
 
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
-    // check if a time slot is available
-    Optional<TimeSlot> findAvailableTimeSlot(long timeSlot);
 
 }

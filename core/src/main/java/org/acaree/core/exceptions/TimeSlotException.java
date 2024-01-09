@@ -8,10 +8,10 @@ package org.acaree.core.exceptions;
  *
  */
 
-public class TimeSlotAvailabilityException extends CustomAppExceptions{
+public class TimeSlotException extends CustomAppExceptions{
     private String message;
 
-    public TimeSlotAvailabilityException(
+    public TimeSlotException(
             String message) {super(message);}
 
 

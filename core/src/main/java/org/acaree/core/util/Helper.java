@@ -4,6 +4,7 @@ import org.acaree.core.model.Appointment;
 import org.acaree.core.model.Person;
 import org.acaree.core.model.TimeSlot;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.format.DateTimeFormatter;
 
@@ -11,7 +12,7 @@ public class Helper {
 
     /**
      * Generate a business key for a person.
-     *
+     * <p>
      * This method generates a business key for a person.
      * The business key should be based on attributes that are immutable
      * and unique to each Person.
@@ -19,10 +20,9 @@ public class Helper {
      * @param personDetails The person for whom the business key is to be generated.
      * @return The business key for the person.
      */
-    public static String generateBusinessKey(Person personDetails) {
+    public static String generateBusinessKey(@Valid Person personDetails) {
         return personDetails.getEmail() + "_" + personDetails.getPhone();
     }
-
 
 
     /**
@@ -30,13 +30,14 @@ public class Helper {
      * This method generates a business key for an appointment.
      * The business key should be based on attributes that are immutable
      * and unique to each Appointment.
+     *
      * @param appointment The appointment for which the business key is to be generated.
      * @return The business key for the appointment.
      * @see Appointment
      */
 
 
-    public static String generateBusinessKey(@NotNull Appointment appointment) {
+    public static String generateBusinessKey(@Valid Appointment appointment) {
         // Formatting the time separately
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmm");
 
@@ -51,6 +52,29 @@ public class Helper {
         return patientId + "_" + doctorId + "_" + startTime + "_" + endTime;
     }
 
+    /**
+     * Generates a business key for a time slot.
+     * This method generates a business key for a time slot.
+     * The business key should be based on attributes that are immutable
+     * and unique to each TimeSlot.
+     *
+     * @param timeSlot The time slot for which the business key is to be generated.
+     * @return The business key for the time slot.
+     * @see TimeSlot
+     */
 
+    public static String generateBusinessKey(@Valid TimeSlot timeSlot) {
+        // Formatting the time separately
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmm");
+
+        String doctorId = timeSlot.getDoctor() != null ? String.valueOf(timeSlot.getDoctor().getId()) : "null";
+
+        // Formatting date and time
+        String startTime = timeSlot.getStartTime() != null ? timeSlot.getStartTime().format(timeFormatter) : "null";
+        String endTime = timeSlot.getEndTime() != null ? timeSlot.getEndTime().format(timeFormatter) : "null";
+
+        return doctorId + "_" + startTime + "_" + endTime;
+
+    }
 }
 

@@ -11,16 +11,15 @@ public class TimeSlotTest {
     @Test
     public void testTimeSlotConstructor() {
         // Arrange
-        long id = 1;
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime endTime = LocalDateTime.now();
         boolean isBooked = false;
 
         // Act
-        TimeSlot timeSlot = new TimeSlot(id, startTime, endTime, isBooked);
+        TimeSlot timeSlot = new TimeSlot(startTime, endTime, isBooked);
 
         // Assert
-        assertEquals(id, timeSlot.getId());
+        assertEquals(0, timeSlot.getId());
         assertEquals(startTime, timeSlot.getStartTime());
         assertEquals(endTime, timeSlot.getEndTime());
         assertEquals(isBooked, timeSlot.isBooked());
@@ -34,8 +33,8 @@ public class TimeSlotTest {
         LocalDateTime endTime = LocalDateTime.now();
         boolean isBooked = false;
 
-        TimeSlot timeSlot1 = new TimeSlot(id, startTime, endTime, isBooked);
-        TimeSlot timeSlot2 = new TimeSlot(id, startTime, endTime, isBooked);
+        TimeSlot timeSlot1 = new TimeSlot(startTime, endTime, isBooked);
+        TimeSlot timeSlot2 = new TimeSlot(startTime, endTime, isBooked);
 
         // Act & Assert
         assertEquals(timeSlot1, timeSlot2);

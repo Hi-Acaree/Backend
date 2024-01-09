@@ -1,27 +1,17 @@
 package org.acaree.core.service;
-
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import lombok.Getter;
 import lombok.Setter;
 import org.acaree.core.exceptions.AppointmentBookingException;
 import org.acaree.core.exceptions.BookingCancelException;
-import org.acaree.core.exceptions.TimeSlotAvailabilityException;
+import org.acaree.core.exceptions.TimeSlotException;
 import org.acaree.core.model.Appointment;
 import org.acaree.core.model.Doctor;
 import org.acaree.core.model.Patient;
 import org.acaree.core.model.TimeSlot;
 import org.acaree.core.repository.AppointmentRepository;
-import org.acaree.core.repository.DoctorRepository;
-import org.acaree.core.repository.PatientRepository;
-import org.acaree.core.repository.TimeSlotRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,7 +23,6 @@ import java.util.Optional;
  *     </p>
  *     <p>
  *         This class is used by the AppointmentController class.
- *
  *         </p>
  */
 
@@ -41,20 +30,20 @@ import java.util.Optional;
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
 
-    private final TimeSlotRepository timeSlotRepository;
+    private final TimeSlotService timeSlotService;
 
-    private final PatientRepository patientRepository;
+    private final PatientService patientService;
 
-    private final DoctorRepository doctorRepository;
+    private final DoctorService doctorService;
 
     @Autowired
     public AppointmentService(AppointmentRepository appointmentRepository,
-    TimeSlotRepository timeSlotRepository, PatientRepository patientRepository,
-        DoctorRepository doctorRepository) {
+    TimeSlotService timeSlotService, PatientService PatientService,
+        DoctorService doctorService) {
         this.appointmentRepository = appointmentRepository;
-        this.timeSlotRepository = timeSlotRepository;
-        this.patientRepository = patientRepository;
-        this.doctorRepository = doctorRepository;
+        this.timeSlotService = timeSlotService;
+        this.patientService = PatientService;
+        this.doctorService = doctorService;
     }
 
     //== public methods ==
@@ -68,13 +57,13 @@ public class AppointmentService {
      * @param timeSlotId the time slot id
      * @return the appointment
      * @throws AppointmentBookingException the appointment booking exception
-     * @throws TimeSlotAvailabilityException the time slot availability exception
+     * @throws TimeSlotException the time slot availability exception
      * @Transactional annotation to book the appointment for the database as a transaction
      * return Appointment
      */
     @Transactional
     public Appointment bookAppointment(long doctorId, long patientId, String reason, long timeSlotId)
-            throws AppointmentBookingException, TimeSlotAvailabilityException {
+            throws AppointmentBookingException, TimeSlotException {
 
         //Input validation
         if (doctorId < 0 || patientId < 0 || reason == null || timeSlotId < 0) {
@@ -83,35 +72,34 @@ public class AppointmentService {
 
         //Get the patient and doctor from the database
 
-        Patient patient = patientRepository.findById(patientId)
-                .orElseThrow(() -> new AppointmentBookingException("Patient not found"));
-        Doctor doctor = doctorRepository.findById(doctorId)
-                .orElseThrow(() -> new AppointmentBookingException("Doctor not found"));
+        Optional<Patient> patient = patientService.getPatientById(patientId);
+
+        Optional<Doctor> doctor = doctorService.getDoctorById(doctorId);
 
         //Create the appointment
         Appointment appointment = new Appointment();
-        appointment.setPatient(patient);
-        appointment.setDoctor(doctor);
+        appointment.setPatient(patient.orElse(null));
+        appointment.setDoctor(doctor.orElse(null));
         appointment.setReason(reason);
 
         //Check if the time slot is available and book it
 
-        Optional<TimeSlot> optionalTimeSlot = timeSlotRepository.findAvailableTimeSlot(timeSlotId);
+        Optional<TimeSlot> optionalTimeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId);
 
         if (optionalTimeSlot.isPresent()) {
             //Time slot is available
-            TimeSlot timeSlot = optionalTimeSlot.get();
+            TimeSlot timeSlot = optionalTimeSlot.orElse(null);
 
             //Book and save the time slot
             timeSlot.setBooked(true);
-            timeSlotRepository.save(timeSlot);
+            timeSlotService.saveTimeSlot(timeSlot);
 
             //Set the time slot and save the appointment
             appointment.setTimeSlot(timeSlot);
             appointment.setBooked(true);
             return appointmentRepository.save(appointment);
         } else {
-            throw new TimeSlotAvailabilityException("Time slot not available");
+            throw new TimeSlotException("Time slot not available");
         }
     }
 
@@ -150,7 +138,7 @@ public class AppointmentService {
         TimeSlot timeSlot = appointment.getTimeSlot();
         if (timeSlot != null) {
             timeSlot.setBooked(false);
-            timeSlotRepository.save(timeSlot);
+            timeSlotService.saveTimeSlot(timeSlot);
         }
 
         return true;
@@ -171,8 +159,9 @@ public class AppointmentService {
     @Transactional
     public Appointment updateAppointment(AppointmentUpdateDTO updateDTO) {
     // Input validation
-    Objects.requireNonNull(updateDTO, "Updates object" +
-            "fields cannot be null");
+    if (Objects.isNull(updateDTO)) {
+        throw new AppointmentBookingException("Invalid appointment details");
+    }
     long appointmentId = updateDTO.getId();
     if (appointmentId < 0) {
         throw new AppointmentBookingException("Invalid appointment id");
@@ -188,26 +177,24 @@ public class AppointmentService {
 
     // Update the patient
     long patientId = updateDTO.getPatientId();
-    Patient patient = patientRepository.findById(patientId)
-            .orElseThrow(() -> new AppointmentBookingException("Patient not found"));
-    appointment.setPatient(patient);
+    Optional<Patient> patient = patientService.getPatientById(patientId);
+
+    appointment.setPatient(patient.orElse(null));
 
     // Update the doctor
     long doctorId = updateDTO.getDoctorId();
-    Doctor doctor = doctorRepository.findById(doctorId)
-            .orElseThrow(() -> new AppointmentBookingException("Doctor not found"));
-    appointment.setDoctor(doctor);
+    Optional<Doctor> doctor = doctorService.getDoctorById(doctorId);
+    appointment.setDoctor(doctor.orElse(null));
 
     // Update the time slot
         // Update the time slot
         long timeSlotId = updateDTO.getTimeSlotId();
         if (appointment.getTimeSlot() == null || appointment.getTimeSlot().getId() != timeSlotId) {
-            TimeSlot timeSlot = timeSlotRepository.findById(timeSlotId)
-                    .orElseThrow(() -> new TimeSlotAvailabilityException("Time slot not found or unavailable"));
-            if (timeSlot.isBooked() && !isTimeSlotCurrentlyAssignedToAppointment(appointment, timeSlot)) {
-                throw new TimeSlotAvailabilityException("Time slot not available");
+            Optional<TimeSlot> timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId);
+            if (timeSlot.get().isBooked() && !isTimeSlotCurrentlyAssignedToAppointment(appointment, timeSlot.get())) {
+                throw new TimeSlotException("Time slot not available");
             }
-            appointment.setTimeSlot(timeSlot);
+            appointment.setTimeSlot(timeSlot.get());
         }
 
         // Save the updated appointment
@@ -216,17 +203,19 @@ public class AppointmentService {
 }
 
     /**
-     * Get an appointment by Id.
-     * @param appointmentId
+     * Get an appointment by id.
+     * @param appointmentId the appointment id
      * @return the appointment
+     * @Trasactional annotation to get the appointment for the database as a transaction
+     * read only annotation to get the appointment for the database as a read only transaction
      */
+    @Transactional(readOnly = true)
     public Appointment getAppointment(long appointmentId) {
         if (appointmentId < 0) {
             throw new AppointmentBookingException("Invalid appointment id");
         }
-        Appointment appointment = appointmentRepository.findById(appointmentId)
+        return appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentBookingException("Appointment not found"));
-        return appointment;
 
 
 
@@ -235,8 +224,11 @@ public class AppointmentService {
     /**
      * Get all appointments.
      * @return the list of appointments
+     * @Transactional annotation to get all appointments for the database as a transaction
+     * read only annotation to get all appointments for the database as a read only transaction
      */
 
+    @Transactional(readOnly = true)
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
 
@@ -245,10 +237,13 @@ public class AppointmentService {
 
     /**
      * Get all appointments by doctor id.
-     * @param doctorId
+     * @param doctorId the doctor id
      * @return the list of appointments for the doctor
+     * @Transactional annotation to get all appointments by doctor id for the database as a transaction
+     * read only annotation to get all appointments by doctor id for the database as a read only transaction
      */
 
+    @Transactional(readOnly = true)
     public List<Appointment> getAllAppointmentsByDoctorId(long doctorId) {
         if (doctorId < 0) {
             throw new AppointmentBookingException("Invalid doctor id");
@@ -258,14 +253,16 @@ public class AppointmentService {
 
     }
 
+
     /**
      * Get all appointments by patient id.
-     * @param patientId
+     * @param patientId the patient id
      * @return the list of appointments for the patient
+     * @Transactional annotation to get all appointments by patient id for the database as a transaction
      */
 
 
-
+    @Transactional(readOnly = true)
     public List<Appointment> getAllAppointmentsByPatientId(long patientId) {
         if (patientId < 0) {
             throw new AppointmentBookingException("Invalid patient id");
@@ -296,8 +293,7 @@ public class AppointmentService {
      * <p>This class is used to update an appointment.</p>
      */
     @Getter @Setter
-    static final
-    class AppointmentUpdateDTO{
+    public static final class AppointmentUpdateDTO{
         private long id;
         private String reason;
         private long timeSlotId;

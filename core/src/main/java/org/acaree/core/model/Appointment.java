@@ -63,8 +63,8 @@ public class Appointment {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Appointment)) return false;
-        Appointment that = (Appointment) o;
-        return Helper.generateBusinessKey(this).equals(Helper.generateBusinessKey(that));
+        Appointment appointment = (Appointment) o;
+        return Helper.generateBusinessKey(this).equals(Helper.generateBusinessKey(appointment));
     }
 
     @Override

@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.util.Helper;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -22,6 +23,9 @@ public class Patient {
     @OneToOne
     @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person personDetails;
+
+    @OneToMany(mappedBy = "patient")
+    private List<Appointment> appointments;
 
     public Patient(Person personDetails) {
         this.personDetails = personDetails;

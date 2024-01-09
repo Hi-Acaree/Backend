@@ -1,7 +1,7 @@
 package org.acaree.core.service;
 import org.acaree.core.exceptions.AppointmentBookingException;
 import org.acaree.core.exceptions.BookingCancelException;
-import org.acaree.core.exceptions.TimeSlotAvailabilityException;
+import org.acaree.core.exceptions.TimeSlotException;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.AppointmentRepository;
 import org.acaree.core.repository.DoctorRepository;
@@ -32,19 +32,19 @@ import static org.mockito.Mockito.*;
  */
 
 @ExtendWith(MockitoExtension.class)
-
 class AppointmentServiceTest {
+
     @Mock
     private AppointmentRepository appointmentRepository;
 
     @Mock
-    private PatientRepository patientRepository;
+    private PatientService patientService;
 
     @Mock
-    private DoctorRepository doctorRepository;
+    private DoctorService doctorService;
 
     @Mock
-    private TimeSlotRepository timeSlotRepository;
+    private TimeSlotService timeSlotService;
 
     @InjectMocks
     private AppointmentService appointmentService;
@@ -57,12 +57,15 @@ class AppointmentServiceTest {
 
     @BeforeEach
     void setUp() {
+
+
+
         LocalDateTime startTime = LocalDateTime.now();
         LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
         appointment = new Appointment();
         patient = new Patient();
         doctor = new Doctor();
-        timeSlot = new TimeSlot();
+        timeSlot = new TimeSlot(startTime, endTime, false);
 
         Person person = new Person();
         Person person1 = new Person();
@@ -80,8 +83,8 @@ class AppointmentServiceTest {
 
         patient.setPersonDetails(person1);
         doctor.setPersonDetails(person);
-        timeSlot.setStartTime(startTime);
-        timeSlot.setEndTime(endTime);
+        timeSlot.setDoctor(doctor);
+
         timeSlot.setId(1L);
         appointment.setDoctor(doctor);
         appointment.setPatient(patient);
@@ -95,14 +98,15 @@ class AppointmentServiceTest {
     void testBookAppointment_Success() {
         // Arrange
 
-        when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
-        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+        when(patientService.getPatientById(2L)).thenReturn(Optional.of(patient));
+        when(doctorService.getDoctorById(1L)).thenReturn(Optional.of(doctor));
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> {
-            Appointment savedAppointment = invocation.getArgument(0);
-            return savedAppointment;
+            Appointment appointment = invocation.getArgument(0);
+            appointment.setId(1L);
+            return appointment;
         });
 
-        when(timeSlotRepository.findAvailableTimeSlot(1L)).thenReturn(Optional.of(timeSlot));
+        when(timeSlotService.findAvailableTimeSlot(1L)).thenReturn(Optional.of(timeSlot));
 
         // Act
         Appointment returnedAppointment = appointmentService.bookAppointment(1L, 2L, "Test", 1L);
@@ -117,21 +121,21 @@ class AppointmentServiceTest {
 
         // Verify that the time slot was marked as booked and saved
         assertTrue(returnedAppointment.getTimeSlot().isBooked());
-        verify(timeSlotRepository).save(returnedAppointment.getTimeSlot());
+        verify(timeSlotService).saveTimeSlot(returnedAppointment.getTimeSlot());
     }
 
 
     @Test
     void testBookAppointment_TimeSlotUnavailable() {
         // Arrange - Mock the behavior for found patient and doctor
-        when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
-        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+        when(patientService.getPatientById(2L)).thenReturn(Optional.of(patient));
+        when(doctorService.getDoctorById(1L)).thenReturn(Optional.of(doctor));
 
         // Mock the behavior for an unavailable time slot
-        when(timeSlotRepository.findAvailableTimeSlot(1L)).thenReturn(Optional.empty());
+        when(timeSlotService.findAvailableTimeSlot(1L)).thenReturn(Optional.empty());
 
         // Act and Assert - Expect a TimeSlotAvailabilityException to be thrown
-        assertThrows(TimeSlotAvailabilityException.class, () -> {
+        assertThrows(TimeSlotException.class, () -> {
             appointmentService.bookAppointment(1L, 2L, "Test", 1L);
         });
     }
@@ -145,18 +149,17 @@ void testUpdateAppointment_Success() {
 
 
      // Set up a different time slot for testing the change scenario
-     TimeSlot newTimeSlot = new TimeSlot();
-     newTimeSlot.setStartTime(startTime);
-     newTimeSlot.setEndTime(endTime);
+     TimeSlot newTimeSlot = new TimeSlot(startTime, endTime, false);
+
      newTimeSlot.setId(2L); // Different ID for the new time slot
-     newTimeSlot.setBooked(false); // Make sure the new time slot is available
+     newTimeSlot.setBooked(false); // Ensure the new time slot is not booked
 
 
     AppointmentService.AppointmentUpdateDTO updateDTO = new AppointmentService.AppointmentUpdateDTO(1L,"Updated reason", 2L, 2L, 1L, true);
     when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
-    when(patientRepository.findById(2L)).thenReturn(Optional.of(patient));
-    when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
-    when(timeSlotRepository.findById(2L)).thenReturn(Optional.of(newTimeSlot));
+    when(patientService.getPatientById(2L)).thenReturn(Optional.of(patient));
+    when(doctorService.getDoctorById(1L)).thenReturn(Optional.of(doctor));
+    when(timeSlotService.findAvailableTimeSlot(2L)).thenReturn(Optional.of(newTimeSlot));
     when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // Act
@@ -186,7 +189,7 @@ void testUpdateAppointment_Success() {
         assertTrue(result);
         assertFalse(appointment.isBooked()); // Appointment should be marked as not booked
         verify(appointmentRepository).save(appointment); // Verify appointment is saved
-        verify(timeSlotRepository).save(appointment.getTimeSlot()); // Verify time slot is freed
+        verify(timeSlotService).saveTimeSlot(appointment.getTimeSlot()); // Verify time slot is freed
     }
 
     @Test
