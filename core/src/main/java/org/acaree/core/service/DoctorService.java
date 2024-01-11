@@ -43,7 +43,7 @@ public class DoctorService {
      */
 
     @Transactional
-    public Doctor saveDoctor(Doctor doctor) {
+    public Doctor saveDoctor(Doctor doctor) throws DoctorException{
            if (Objects.isNull(doctor)) {
                 throw new DoctorException("Doctor object cannot be null");
             }
@@ -62,7 +62,7 @@ public class DoctorService {
      */
 
     @Transactional(readOnly = true)
-    public Optional<Doctor> getDoctorById(long id) {
+    public Optional<Doctor> getDoctorById(long id) throws DoctorException {
         if (id < 0) {
             throw new DoctorException("Doctor with id: " + id + " not found");
         }
@@ -72,15 +72,9 @@ public class DoctorService {
 
         return Optional.of(doctor);
     }
-
-    /**
-     * This method is used to delete a doctor by id.
-     * @param id the id of the doctor to be deleted.
-     * @Transactional is used to mark the method as a transactional method.
-     * @throws DoctorException if doctor with id is not found or if doctor has appointments.
-     */
+    // delete doctor by id
     @Transactional
-    public void deleteDoctorById(long id) {
+    public void deleteDoctorById(long id) throws DoctorException {
         // Check if doctor exists
         Doctor doctor =
           doctorRepository.findById(id).orElseThrow(()
@@ -104,7 +98,7 @@ public class DoctorService {
      * @return the updated doctor.
      */
     @Transactional
-    public Doctor updateDoctor(Doctor doctor) {
+    public Doctor updateDoctor(Doctor doctor) throws DoctorException {
         if (Objects.isNull(doctor)) {
             throw new DoctorException("Doctor object cannot be null");
         }
@@ -118,25 +112,16 @@ public class DoctorService {
         return doctorRepository.save(doctor);
     }
 
-    /**
-     * This method is used to get all doctors.
-     * @return all doctors.
-     */
+    // get all doctors
+
     @Transactional(readOnly = true)
     public Iterable<Doctor> getAllDoctors() {
 
         return doctorRepository.findAll();
     }
 
-    /**
-     * This method is used to get all appointments of a doctor.
-     * @param doctorId the id of the doctor.
-     * doesn't get involved in the transaction.
-     * @return all appointments of the doctor.
-     */
-
     @Transactional(readOnly = true)
-    public List<Appointment> getDoctorsAppointments(Long doctorId) {
+    public List<Appointment> getDoctorsAppointments(Long doctorId) throws DoctorException {
         if(Objects.isNull(doctorId)) {
             throw new DoctorException("Doctor id cannot be null");
         }
@@ -148,16 +133,10 @@ public class DoctorService {
         return appointments;
 
     }
-
-    /**
-     * This method is used to get all doctors by specialization.
-     * @param specialization the specialization of the doctor.
-     * doesn't get involved in the transaction.
-     * @return all doctors with the given specialization.
-     */
+    // get doctors by specialization
 
     @Transactional(readOnly = true)
-    public List<Doctor> getDoctorsBySpecialization(String specialization) {
+    public List<Doctor> getDoctorsBySpecialization(String specialization) throws DoctorException {
         if (Objects.isNull(specialization)) {
             throw new DoctorException("Specialization cannot be null");
         }
@@ -169,16 +148,10 @@ public class DoctorService {
         return doctors;
     }
 
-    /**
-     * This method is used to get all appointments of a doctor by patient id.
-     * @param doctorId the id of the doctor.
-     * @param patientId the id of the patient.
-     * doesn't get involved in the transaction.
-     * @return all appointments of the doctor with the given patient id.
-     */
+// get doctors by patient id
 
     @Transactional(readOnly = true)
-    public List<Appointment> getDoctorsAppointmentsByPatientId(Long doctorId, Long patientId) {
+    public List<Appointment> getDoctorsAppointmentsByPatientId(Long doctorId, Long patientId) throws DoctorException {
         if(Objects.isNull(doctorId) || Objects.isNull(patientId)) {
             throw new DoctorException("Doctor id or patient id cannot be null");
         }
@@ -195,12 +168,12 @@ public class DoctorService {
      * @param doctorId the id of the doctor.
      * @param patientId the id of the patient.
      * @param timeSlotId the id of the time slot.
-     * doesn't get involved in the transaction.
      * @return all appointments of the doctor with the given patient id and time slot id.
      */
 
     @Transactional(readOnly = true)
-    public List<Appointment> getDoctorsAppointmentsByPatientIdAndTimeSlotId(Long doctorId, Long patientId, Long timeSlotId) {
+    public List<Appointment> getDoctorsAppointmentsByPatientIdAndTimeSlotId(Long doctorId, Long patientId, Long timeSlotId)
+            throws DoctorException{
         if(Objects.isNull(doctorId) || Objects.isNull(patientId) || Objects.isNull(timeSlotId)) {
             throw new DoctorException("Doctor id or patient id or time slot id invalid");
         }
@@ -220,7 +193,8 @@ public class DoctorService {
      */
 
     @Transactional(readOnly = true)
-    public List<Appointment> getDoctorsAppointmentsByTimeSlotId(Long doctorId, Long timeSlotId) {
+    public List<Appointment> getDoctorsAppointmentsByTimeSlotId(Long doctorId, Long timeSlotId)
+            throws DoctorException{
         if(Objects.isNull(doctorId) || Objects.isNull(timeSlotId)) {
             throw new DoctorException("Doctor id or time slot id invalid");
         }
@@ -232,15 +206,11 @@ public class DoctorService {
         return appointments;
     }
 
-    /**
-     * This method is used to get all doctors by department.
-     * @param departmentName the department of the doctor.
-     * doesn't get involved in the transaction.
-     * @return all doctors with the given department.
-     */
+// get doctors by department
 
     @Transactional(readOnly = true)
-    public List<Doctor> getDoctorsByDepartment(String departmentName) {
+    public List<Doctor> getDoctorsByDepartment(String departmentName)
+            throws DoctorException{
         if (Objects.isNull(departmentName) || departmentName.isEmpty()) {
             throw new DoctorException("Department invalid");
         }
@@ -252,9 +222,19 @@ public class DoctorService {
         return doctors;
     }
 
+    /**
+     * This method is used to set the availability of a doctor.
+     * @param doctorId
+     * @param day
+     * @param timeSlots
+     * @throws DoctorException
+     * @throws TimeSlotException
+     */
+
     // set days doctor is available
     @Transactional
-    public void setDoctorAvailability(long doctorId, Doctor.DaysOfTheWeek day, Set<TimeSlot> timeSlots) {
+    public void setDoctorAvailability(long doctorId, Doctor.DaysOfTheWeek day, Set<TimeSlot> timeSlots)
+            throws DoctorException, TimeSlotException{
         if (Objects.isNull(day) || Objects.isNull(timeSlots)) {
             throw new DoctorException("Day or time slots cannot be null");
         }
@@ -274,7 +254,8 @@ public class DoctorService {
         log.info("Doctor with id: {}, Day: {} availability set", doctorId, day);
     }
 
-    private void validateTimeSlots(Set<TimeSlot> timeSlots) {
+    private void validateTimeSlots(Set<TimeSlot> timeSlots)
+            throws TimeSlotException{
         for (TimeSlot timeSlot : timeSlots) {
             if (timeSlot.getStartTime().isAfter(timeSlot.getEndTime())) {
                 throw new TimeSlotException("Invalid time slot: Start time must be before end time");
@@ -303,12 +284,23 @@ public class DoctorService {
 
 
     @Transactional
-    public void removeDoctorAvailability(long id, Doctor.DaysOfTheWeek day){
+    public void removeDoctorAvailability(long id, Doctor.DaysOfTheWeek day) throws DoctorException{
+        if (id < 0) {
+            throw new DoctorException("Invalid doctor input");
+        }
+
+        if (Objects.isNull(day)) {
+            throw new DoctorException("Day cannot be null");
+        }
         // Check if doctor exists
         Doctor doctor =
                 doctorRepository.findById(id).orElseThrow(()
                         -> new DoctorException("Doctor with id: " + id + " not found"));
         Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> availableDates = doctor.getAvailableDates();
+        if (availableDates.isEmpty() || !availableDates.containsKey(day)) {
+            throw new DoctorException("Doctor with id: " + id + " has no availability on day: " + day);
+        }
+
         availableDates.remove(day);
         doctor.setAvailableDates(availableDates);
         doctorRepository.save(doctor);
@@ -317,10 +309,11 @@ public class DoctorService {
     }
 
     @Transactional(readOnly = true)
-    public Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> getDoctorAvailability(long id) {
-        if(Objects.isNull(id)) {
-            throw new DoctorException("Invalid ID ...");
+    public Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> getDoctorAvailability(long id) throws DoctorException {
+        if (id < 0) {
+            throw new DoctorException("Doctor with id: " + id + " not found");
         }
+        // Check if doctor exists
         Doctor doctor = doctorRepository.findById(id).orElseThrow(()
                 -> new DoctorException("Doctor with id: " + id + " not found"));
         Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> availableDates = doctor.getAvailableDates();
@@ -328,11 +321,6 @@ public class DoctorService {
 
         return availableDates;
     }
-
-
-
-
-
 
 
 }

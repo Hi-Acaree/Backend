@@ -422,8 +422,9 @@ import static org.mockito.Mockito.when;
     void testRemoveDoctorAvailability_Success() {
         // Arrange
         long doctorId = 1L;
-        Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY;
+        Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.THURSDAY;
         Doctor doctor = createMockDoctor();
+        doctor.getAvailableDates().put(day, new HashSet<>()); // Populate with mock data if needed
 
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
 

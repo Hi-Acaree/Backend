@@ -2,7 +2,10 @@ package org.acaree.core.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.PatientException;
+import org.acaree.core.model.Appointment;
+import org.acaree.core.model.Doctor;
 import org.acaree.core.model.Patient;
+import org.acaree.core.model.TimeSlot;
 import org.acaree.core.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -167,6 +170,7 @@ public class PatientService {
         log.info("Patient with id: {} deleted", id);
 
     }
+
 
 
 

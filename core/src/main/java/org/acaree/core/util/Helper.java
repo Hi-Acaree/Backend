@@ -1,12 +1,14 @@
 package org.acaree.core.util;
 
 import org.acaree.core.model.Appointment;
+import org.acaree.core.model.AppointmentNotificationMessage;
 import org.acaree.core.model.Person;
 import org.acaree.core.model.TimeSlot;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 
 public class Helper {
 
@@ -76,5 +78,7 @@ public class Helper {
         return doctorId + "_" + startTime + "_" + endTime;
 
     }
+
+
 }
 

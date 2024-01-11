@@ -31,21 +31,17 @@ public class Patient {
         this.personDetails = personDetails;
     }
 
-    // equals and hashCode methods are overridden to compare two Patient objects
-    // using business keys.
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Patient)) return false;
         Patient patient = (Patient) o;
-        return Helper.generateBusinessKey(personDetails).equals(Helper.generateBusinessKey(patient.personDetails));
-
+        return Objects.equals(id, patient.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(Helper.generateBusinessKey(personDetails));
+        return Objects.hash(id);
     }
 
     @Override
@@ -57,5 +53,7 @@ public class Patient {
                 ", phone=" + personDetails.getPhone() +
                 '}';
     }
+
+
 }
 

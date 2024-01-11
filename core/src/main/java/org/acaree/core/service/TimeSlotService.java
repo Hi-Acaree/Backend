@@ -1,5 +1,8 @@
 package org.acaree.core.service;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.TimeSlotException;
 import org.acaree.core.model.TimeSlot;
@@ -14,18 +17,19 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class TimeSlotService {
+    @PersistenceContext
+    private EntityManager entityManager;
     private final TimeSlotRepository timeSlotRepository;
 
     @Autowired
     public TimeSlotService(TimeSlotRepository timeSlotRepository) {
-
         this.timeSlotRepository = timeSlotRepository;
     }
 
     //== public methods ==
 
     @Transactional(readOnly = true)
-    public Optional<TimeSlot> findAvailableTimeSlot(long id) {
+    public Optional<TimeSlot> findAvailableTimeSlot(long id) throws TimeSlotException {
         if (id < 0) {
             log.error("Invalid TimeSlot ID: {}", id);
             throw new TimeSlotException("Invalid TimeSlot ID: " + id);
@@ -37,7 +41,7 @@ public class TimeSlotService {
 
 
     @Transactional
-    public void saveTimeSlot(TimeSlot timeSlot) {
+    public void saveTimeSlot(TimeSlot timeSlot) throws TimeSlotException {
         if (Objects.isNull(timeSlot)) {
             log.error("TimeSlot object cannot be null");
             throw new TimeSlotException("TimeSlot object cannot be null");
@@ -47,14 +51,10 @@ public class TimeSlotService {
             throw new TimeSlotException("Invalid time slot: Start time must be before end time.");
         }
 
-        // Removed the automatic setting of timeSlot to booked
         timeSlotRepository.save(timeSlot);
+        entityManager.refresh(timeSlot);
         log.info("TimeSlot saved successfully: {}", timeSlot);
     }
 
-    @Transactional
-    public void scheduleDoctorAvailableTimeSlots(){
-
-    }
 }
 

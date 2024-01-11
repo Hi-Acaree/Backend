@@ -31,6 +31,7 @@
         <spring-boot-starter-jdbc.version>3.2.0</spring-boot-starter-jdbc.version>
         <spring-boot-starter-data-jpa.version>3.2.0</spring-boot-starter-data-jpa.version>
         <spring-security-core.version>6.2.0</spring-security-core.version>
+        <spring-boot-starter-amqp.version>3.2.0</spring-boot-starter-amqp.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <hibernate.validator.version>7.0.0.Alpha1</hibernate.validator.version>
         <spring-boot-starter-validation.version>3.2.0</spring-boot-starter-validation.version>
@@ -126,6 +127,13 @@
                 <artifactId>spring-boot-starter-validation</artifactId>
                 <version>${spring-boot-starter-validation.version}</version>
             </dependency>
+        <!-- spring-boot-starter-amqp rabbitmq-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-amqp</artifactId>
+                <version>${spring-boot-starter-amqp.version}</version>
+            </dependency>
+
 
 
             <!-- javax validation -->
