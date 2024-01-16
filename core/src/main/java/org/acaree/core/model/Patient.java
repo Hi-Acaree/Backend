@@ -5,10 +5,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.acaree.core.util.Helper;
 
 import java.util.List;
 import java.util.Objects;
+
+/**
+ * This class represents a patient in the system.
+ * A patient is a person who has a medical record in the system.
+ * A patient can have multiple appointments.
+ * A patient can have multiple medical records.
+ * A patient can have multiple prescriptions.
+ * A patient can have multiple medical tests.
+ * A patient can have multiple medical test results.
+ * A patient can have multiple medical test requests.
+ * A patient can have multiple medical test request results.
+ * A patient can have multiple medical test request results.
+ * A patient can have multiple medical test request
+ **/
 
 @Entity
 @Getter @Setter
@@ -53,6 +66,8 @@ public class Patient {
                 ", phone=" + personDetails.getPhone() +
                 '}';
     }
+
+    // == inner class ==
 
 
 }

@@ -33,7 +33,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
      * @param patientId the id of the patient.
      * @return the appointment.
      */
-    @Query("SELECT a FROM Appointment a WHERE a.patient.id = ?1")
+    @Query("SELECT appointment FROM Appointment appointment WHERE appointment.patient.id = ?1")
     List<Appointment> findPatientAppointment(long patientId);
 
 }

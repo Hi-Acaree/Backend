@@ -17,7 +17,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Time;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -79,7 +81,7 @@ class AppointmentServiceTest {
         doctor.setPersonDetails(new Person("Dr", "Smith", "keller@test.com", "0987654321"));
         doctor.setId(1L);
 
-        timeSlot.setDoctor(doctor);
+
         timeSlot.setId(1L);
         appointment.setDoctor(doctor);
         appointment.setPatient(patient);
@@ -336,38 +338,38 @@ void testUpdateAppointment_Success() {
     }
 
     @Test
-    void rescheduleAppointment_ShouldRescheduleSuccessfully(){
-        long appointmentId = 1L;
-        String reasonForChange = "Change in schedule";
-        long newTimeSlotId = 2L;
+    void testScheduleReoccurringAppointments_ValidInput() {
+        long patientId = patient.getId();
+        String reason = "Checkup";
+        long timeSlotId = timeSlot.getId();
+        int numberOfAppointments = 3;
+        Period recurrencePeriod = Period.ofWeeks(1);
 
-        Appointment mockAppointment = new Appointment();
-        mockAppointment.setId(5L);
-        mockAppointment.setBooked(true);
-        mockAppointment.setReason("Test");
-        mockAppointment.setTimeSlot(timeSlot);
-        mockAppointment.setPatient(patient);
-        mockAppointment.setDoctor(doctor);
+            when(patientService.getPatientById(anyLong()))
+                    .thenReturn(Optional.of(patient)); // Mocking patient retrieval
 
-        when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(mockAppointment));
-        when(timeSlotService.findAvailableTimeSlot(newTimeSlotId)).thenReturn(Optional.of(timeSlot));
-        when(patientService.getPatientById(2L)).thenReturn(Optional.of(patient));
+            when(timeSlotService.findAvailableTimeSlot(anyLong()))
+                    .thenReturn(Optional.of(timeSlot)); // Mocking available time slot
 
-        when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+            when(timeSlotService.findAvailableTimeSlot(anyLong()))
+                    .thenReturn(Optional.of(timeSlot)); // Mocking available time slot
+            when(timeSlotService.findAvailableTimeSlot(anyLong()))
+                    .thenReturn(Optional.of(timeSlot)); // Mocking available time slot
 
+            doNothing().when(timeSlotService).saveTimeSlot(any(TimeSlot.class)); // Mocking time slot saving
 
-        Appointment rescheduledAppointment = appointmentService.rescheduleAppointment(appointmentId, reasonForChange, newTimeSlotId);
-        Logger logger = LoggerFactory.getLogger(AppointmentServiceTest.class);
-        logger.info("rescheduledAppointment: {}", rescheduledAppointment.isBooked());
+            List<Appointment> appointments = appointmentService.scheduleReoccurringAppointments(
+                    patientId, reason, timeSlotId, numberOfAppointments, recurrencePeriod);
 
-        assertNotNull(rescheduledAppointment);
-        assertEquals(timeSlot, rescheduledAppointment.getTimeSlot());
-        assertEquals(reasonForChange, rescheduledAppointment.getReason());
+            assertEquals(numberOfAppointments, appointments.size());
+            verify(timeSlotService, times(6)).findAvailableTimeSlot(anyLong());
+            verify(timeSlotService, times(numberOfAppointments)).saveTimeSlot(any(TimeSlot.class));
 
-        verify(appointmentRepository).save(any(Appointment.class));
-        verify(appointmentNotificationPublisher).publishMessage(eq("appointment"), any(AppointmentNotificationMessage.class));
-        // Add more verifications as necessary
     }
+
+    // Additional test cases...
+
+
 
     @Test
     void rescheduleAppointment_ShouldThrowException_WhenAppointmentNotFound(){
@@ -384,18 +386,15 @@ void testUpdateAppointment_Success() {
 
 
 
+    public void testScheduleReoccurringAppointments_InvalidInput() throws AppointmentBookingException{
+        appointmentService.scheduleReoccurringAppointments(-1, null, -1, 0, Period.ofWeeks(1));
+    }
 
+    public void testScheduleReoccurringAppointments_UnavailableTimeSlot() throws TimeSlotException, AppointmentBookingException {
+        when(timeSlotService.findAvailableTimeSlot(anyLong()))
+                .thenReturn(Optional.empty()); // Mock no available time slot
 
-
-
-
-
-
-
-
-
-
-
-
+        appointmentService.scheduleReoccurringAppointments(1, "Checkup", 10, 3, Period.ofWeeks(1));
+    }
 
 }

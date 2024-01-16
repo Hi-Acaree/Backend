@@ -14,6 +14,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Service class for TimeSlot entity
+ * <p> This class is responsible for all the business logic related to TimeSlot entity</p>
+ * <p> This class is annotated with @Service annotation to indicate that it is a service class</p>
+ * <p> This class is annotated with @Slf4j annotation to enable logging</p>
+ * <p> This class is annotated with @Transactional annotation to enable transaction management</p>
+ * <p> This class is annotated with @PersistenceContext annotation to inject EntityManager</p>
+ * <p> This class is annotated with @Autowired annotation to inject TimeSlotRepository</p>
+ */
 @Service
 @Slf4j
 public class TimeSlotService {

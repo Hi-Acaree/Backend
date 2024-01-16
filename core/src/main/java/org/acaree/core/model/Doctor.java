@@ -39,25 +39,11 @@ public class Doctor {
     private String hospitalName;
     private String departmentName;
 
-    @OneToMany(mappedBy = "doctor")
-    private Set<TimeSlot> timeSlots;
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<DoctorAvailability> daysAvailable = new HashSet<>();
 
     @OneToMany(mappedBy = "doctor")
     private List<Appointment> appointments;
-
-    /**
-     * @ElementCollection annotation is used to define a collection of instances of a basic type or embeddable class.
-     * @CollectionTable annotation is used to define the table that will be used to persist the collection.
-     * @MapKeyColumn annotation is used to define the column name that will hold the map key.
-     * @Column annotation is used to define the column name that will hold the map value.
-     * @JoinColumn annotation is used to define the foreign key column in the collection table.
-     */
-
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "doctor_availability", joinColumns = @JoinColumn(name = "doctor_id"))
-    @MapKeyColumn(name = "day_of_week")
-    @Column(name = "time_slots")
-    private Map<DaysOfTheWeek, Set<TimeSlot>> availableDates = new HashMap<>();
 
     //== constructors ==
 
@@ -66,7 +52,7 @@ public class Doctor {
         this.specialization = specialization;
         this.hospitalName = hospitalName;
         this.departmentName = departmentName;
-        this.timeSlots = new HashSet<>();
+        this.daysAvailable = new HashSet<>();
     }
 
     //== methods ==
@@ -100,6 +86,8 @@ public class Doctor {
     }
 
     //== inner enum class ==
+
+        @Embeddable
         public enum DaysOfTheWeek {
             MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY;
         }

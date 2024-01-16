@@ -12,19 +12,17 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Time;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
  * Service for the Appointment class.
- * <p>
- *     This class is used to access the database for the Appointment class.
- *     </p>
- *     <p>
- *         This class is used by the AppointmentController class.
- *         </p>
+ * <p>This class is used to access the database for the Appointment class.</p>
+ * <p>This class is used by the AppointmentController class.</p>
  */
 
 @Service
@@ -43,7 +41,8 @@ public class AppointmentService {
     public AppointmentService(AppointmentRepository appointmentRepository,
     TimeSlotService timeSlotService, PatientService PatientService,
         DoctorService doctorService,
-    AppointmentNotificationPublisher appointmentNotificationPublisher) {
+    AppointmentNotificationPublisher appointmentNotificationPublisher)
+    {
         this.appointmentRepository = appointmentRepository;
         this.timeSlotService = timeSlotService;
         this.patientService = PatientService;
@@ -236,7 +235,7 @@ public class AppointmentService {
      * Update an appointment.
      * <p>This method is used to update an appointment.</p>
      * <p>This method is used by the AppointmentController class.</p>
-     * @param updateDTO the appointment update dto
+     * @param updateDTO the appointment update data transfer object
      * @return the appointment
      * @throws AppointmentBookingException the appointment booking exception
      * @Transactional annotation to update the appointment for the database as a transaction
@@ -357,7 +356,53 @@ public class AppointmentService {
 
     }
 
-    //== private methods ==
+    /**
+     * Schedule Reoccurring appointments.
+     * <p>This method is used to schedule reoccurring appointments.</p>
+     * <p>This method is used by the AppointmentController class.</p>
+     * @param patientId the patient id
+     * @param reason the reason
+     * @param timeSlotId the time slot id
+     * @param numberOfAppointments the number of appointments
+     * @param recurrencePeriod the frequency of appointments
+     * @return the list of appointments
+     * @throws AppointmentBookingException the appointment booking exception
+     * @throws PatientException the patient exception
+     * @throws TimeSlotException the time slot exception
+     */
+
+    @Transactional
+    public List<Appointment> scheduleReoccurringAppointments(long patientId,
+       String reason, long timeSlotId, int numberOfAppointments, Period recurrencePeriod)
+            throws AppointmentBookingException, PatientException, TimeSlotException {
+        if (patientId < 0 || reason == null || timeSlotId < 0 || numberOfAppointments <= 0) {
+            throw new AppointmentBookingException("Invalid appointment details");
+        }
+
+        List<Appointment> appointments = new ArrayList<>();
+
+        for (int i = 0; i < numberOfAppointments; i++) {
+            Appointment appointment = bookAppointmentByPatient(patientId, reason, timeSlotId);
+            appointments.add(appointment);
+
+            TimeSlot currentSlot = appointment.getTimeSlot();
+            TimeSlot nextTimeSlot = calculateNextAppointmentTime(currentSlot, recurrencePeriod);
+
+            Optional<TimeSlot> availableTimeSlot = timeSlotService.findAvailableTimeSlot(nextTimeSlot.getId());
+            if (!availableTimeSlot.isPresent()) {
+                throw new TimeSlotException("Time slot not available");
+            } else {
+                nextTimeSlot = availableTimeSlot.get();
+                timeSlotService.saveTimeSlot(nextTimeSlot);
+            }
+        }
+
+        return appointments;
+    }
+
+
+
+    //== private and package private methods ==
 
     /** isTimeSlotCurrentlyAssignedToAppointment method.
      * Check if the time slot is currently assigned to the appointment.
@@ -486,6 +531,34 @@ public class AppointmentService {
 
         return message;
     }
+
+    /** calculateNextAppointmentTime method.
+     * Calculate the next appointment time.
+     * <p>This method is used to calculate the next reoccurring appointment time.</p>
+     * @param currentSlot the current slot
+     * @param recurrencePeriod the recurrence period
+     * @return the time slot
+     */
+
+    protected TimeSlot calculateNextAppointmentTime(TimeSlot currentSlot, Period recurrencePeriod) {
+        Objects.requireNonNull(currentSlot, "Invalid time slot");
+
+        LocalDateTime startTime = currentSlot.getStartTime();
+        LocalDateTime endTime = currentSlot.getEndTime();
+
+        LocalDateTime nextStartTime = startTime.plus(recurrencePeriod);
+        LocalDateTime nextEndTime = endTime.plus(recurrencePeriod);
+
+        TimeSlot newTimeSlot = new TimeSlot();
+        newTimeSlot.setStartTime(nextStartTime);
+        newTimeSlot.setEndTime(nextEndTime);
+
+        // Additional logic if needed (e.g., setting other properties of the new time slot)
+
+
+        return newTimeSlot;
+    }
+
 
 
 

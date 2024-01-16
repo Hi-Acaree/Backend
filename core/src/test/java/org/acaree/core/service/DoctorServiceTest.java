@@ -2,6 +2,7 @@ package org.acaree.core.service;
 
 import org.acaree.core.exceptions.DoctorException;
 import org.acaree.core.model.*;
+import org.acaree.core.repository.DoctorAvailabilityRepository;
 import org.acaree.core.repository.DoctorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,13 +13,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.singletonList;
 import static org.hibernate.validator.internal.util.Contracts.assertNotEmpty;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 /**
  * This class is a service class for Doctor.
@@ -30,6 +31,9 @@ import static org.mockito.Mockito.when;
  class DoctorServiceTest {
     @Mock
     private DoctorRepository doctorRepository;
+
+    @Mock
+    private DoctorAvailabilityRepository doctorAvailabilityRepository;
     @InjectMocks
     private DoctorService doctorService;
 
@@ -47,10 +51,23 @@ import static org.mockito.Mockito.when;
     private List<Doctor> doctors = new ArrayList<>();
     private Set<TimeSlot> timeSlots;
     private Doctor.DaysOfTheWeek day;
+    private Doctor.DaysOfTheWeek[] daysOfTheWeeks;
+    private Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> availability;
+    private Set<TimeSlot> timeSlots1;
 
     @BeforeEach
     void setUp() {
-
+        daysOfTheWeeks = new Doctor.DaysOfTheWeek[]{Doctor.DaysOfTheWeek.MONDAY,
+                Doctor.DaysOfTheWeek.TUESDAY, Doctor.DaysOfTheWeek.WEDNESDAY, Doctor.DaysOfTheWeek.THURSDAY,
+                Doctor.DaysOfTheWeek.FRIDAY, Doctor.DaysOfTheWeek.SATURDAY, Doctor.DaysOfTheWeek.SUNDAY};
+        timeSlots1 = new HashSet<>();
+        for (int i = 0; i < 7; i++) {
+            timeSlots1.add(new TimeSlot(LocalDateTime.now(), LocalDateTime.now().plusMinutes(10)));
+        }
+        availability = new HashMap<>();
+        for (Doctor.DaysOfTheWeek day : daysOfTheWeeks) {
+            availability.put(day, timeSlots1);
+        }
 
         person = new Person();
         person.setId(1L);
@@ -388,29 +405,29 @@ import static org.mockito.Mockito.when;
     @Test
     void test_Set_Doctor_Availability_Success() {
         // Arrange
-        Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY; // Example day
-        Set<TimeSlot> timeSlots = new HashSet<>(); // Example time slots
-        timeSlots.add(timeSlot);
+        Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY;
+        Set<TimeSlot> timeSlots = new HashSet<>();
+        timeSlots.add(new TimeSlot(LocalDateTime.now(), LocalDateTime.now().plusMinutes(10)));
 
         when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+        when(doctorAvailabilityRepository.save(any(DoctorAvailability.class))).thenAnswer(i -> i.getArguments()[0]);
         when(doctorRepository.save(any(Doctor.class))).thenAnswer(i -> i.getArguments()[0]);
 
         // Act
         doctorService.setDoctorAvailability(1L, day, timeSlots);
 
         // Assert
-        assertNotNull(doctor.getAvailableDates());
-        assertEquals(timeSlots, doctor.getAvailableDates().get(day));
-
-        verify(doctorRepository).save(doctor); // Verify save was called
+        assertNotNull(doctor.getDaysAvailable());
+        assertTrue(doctor.getDaysAvailable().contains(new DoctorAvailability(doctor, day, timeSlots)));
+        verify(doctorRepository).save(doctor);
     }
 
     @Test
-    void test_Set_Doctor_Availability_Invalid_Doctor_Id_Failure() {
+    void test_Set_Doctor_Availability_Failure() {
         // Arrange
         Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY;
         Set<TimeSlot> timeSlots = new HashSet<>();
-        timeSlots.add(timeSlot);
+        timeSlots.add(new TimeSlot(LocalDateTime.now(), LocalDateTime.now().plusMinutes(10)));
 
         when(doctorRepository.findById(1L)).thenThrow(DoctorException.class);
 
@@ -418,54 +435,86 @@ import static org.mockito.Mockito.when;
         assertThrows(DoctorException.class, () -> doctorService.setDoctorAvailability(1L, day, timeSlots));
     }
 
-    @Test
-    void testRemoveDoctorAvailability_Success() {
-        // Arrange
-        long doctorId = 1L;
-        Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.THURSDAY;
-        Doctor doctor = createMockDoctor();
-        doctor.getAvailableDates().put(day, new HashSet<>()); // Populate with mock data if needed
+@Test
+void testRemoveDoctorAvailability_Success() {
+    // Arrange
+    long doctorId = 1L;
+    Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY;
+    Doctor doctor = new Doctor();
+    Set<TimeSlot> timeSlots = new HashSet<>();
+    timeSlots.add(new TimeSlot(LocalDateTime.now(), LocalDateTime.now().plusMinutes(10)));
+    doctor.getDaysAvailable().add(new DoctorAvailability(doctor, day, timeSlots));
 
-        when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+    when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+    doNothing().when(doctorAvailabilityRepository).deleteAll(any(Set.class));
 
-        // Act
-        doctorService.removeDoctorAvailability(doctorId, day);
+    // Act
+    doctorService.removeDoctorAvailability(doctorId, day);
 
-        // Assert
-        assertFalse(doctor.getAvailableDates().containsKey(day));
-        verify(doctorRepository).save(doctor);
-        verify(doctorRepository).findById(doctorId);
-    }
+    // Assert
+verify(doctorRepository).findById(doctorId);
+verify(doctorAvailabilityRepository).deleteAll(any(Set.class));
 
-    private Doctor createMockDoctor() {
-        Doctor doctor = new Doctor();
-        doctor.setAvailableDates(new HashMap<>()); // Populate with mock data if needed
-        return doctor;
-    }
+}
 
     @Test
     void testGetDoctorAvailability_Success() {
         // Arrange
         long doctorId = 1L;
         Doctor doctor = createMockDoctor();
-        Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> mockAvailability = new HashMap<>();
-        // Populate mockAvailability as needed
+        Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY;
 
-        doctor.setAvailableDates(mockAvailability);
+        doctor.getDaysAvailable().add(new DoctorAvailability(doctor, day, new HashSet<>(
+                Arrays.asList(new TimeSlot(LocalDateTime.now(), LocalDateTime.now().plusMinutes(10))))
+        ));
         when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
 
         // Act
         Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> availability = doctorService.getDoctorAvailability(doctorId);
 
         // Assert
-        assertEquals(mockAvailability, availability);
         verify(doctorRepository).findById(doctorId);
+        assertEquals(1, availability.size());
+        assertEquals(1, availability.get(day).size());
+        assertEquals(doctor.getDaysAvailable().iterator().next().getTimeSlots(), availability.get(day));
+
     }
 
+    @Test
+    void testUpdateDoctorWeeklySchedule() {
+    // Arrange
+    long doctorId = 1L;
+    Doctor doctor = createMockDoctor();
+    doctor.setPersonDetails(person);
+    Doctor.DaysOfTheWeek day = Doctor.DaysOfTheWeek.MONDAY;
+    Set<TimeSlot> timeSlots = new HashSet<>(
+            Arrays.asList(new TimeSlot(LocalDateTime.now(), LocalDateTime.now().plusMinutes(30)))
+    );
 
+    Map<Doctor.DaysOfTheWeek, Set<TimeSlot>> newAvailability = new HashMap<>();
+    newAvailability.put(day, timeSlots);
 
+    DoctorAvailability doctorAvailability = new DoctorAvailability(doctor, day, timeSlots);
 
+    doctor.getDaysAvailable().add(doctorAvailability);
+    when(doctorRepository.findById(doctorId)).thenReturn(Optional.of(doctor));
+    when(doctorRepository.save(any(Doctor.class))).thenAnswer(i -> i.getArguments()[0]);
 
+    // Act
+    doctorService.updateDoctorWeeklySchedule(doctorId, newAvailability);
+
+    // Assert
+    verify(doctorRepository).findById(doctorId);
+    assertEquals(1, newAvailability.size());
+    assertEquals(1, newAvailability.get(day).size());
+    assertEquals(doctor.getDaysAvailable().iterator().next().getTimeSlots(), newAvailability.get(day));
+}
+
+    private Doctor createMockDoctor() {
+        Doctor doctor = new Doctor();
+        doctor.setDaysAvailable(new HashSet<>());
+        return doctor;
+    }
 
 }
 

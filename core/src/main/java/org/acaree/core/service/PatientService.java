@@ -15,6 +15,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * This class is used to implement the business logic for the patient.
+ * It is used to perform CRUD operations on the patient.
+ * It is annotated with @Service annotation.
+ * It is annotated with @Slf4j annotation to enable logging.
+ */
+
 @Service
 @Slf4j
 public class PatientService {
@@ -55,7 +62,6 @@ public class PatientService {
      * @param id the id of the patient.
      * @return the patient with the given id.
      * @throws PatientException if patient with id is not found.
-     * @Transactional(readOnly = true is used to mark the method as read only, so that the transaction manager
      * doesn't get involved in the transaction.
      */
 
@@ -77,10 +83,7 @@ public class PatientService {
 
     /**
      * This method is used to get all patients.
-     *
      * @return all patients.
-     * @Transactional(readOnly = true is used to mark the method as read only, so that the transaction manager
-     * doesn't get involved in the transaction.
      */
 
     public Iterable<Patient> getAllPatients() {
@@ -95,7 +98,6 @@ public class PatientService {
      *
      * @param id the id of the patient.
      * @throws PatientException if patient with id is not found.
-     * @Transactional is used to mark the method as a transactional method.
      */
 
     public void deletePatientById(long id) {
@@ -115,13 +117,11 @@ public class PatientService {
      * @param patient the patient to be updated.
      * @return the updated patient.
      * @throws PatientException if patient object is null.
-     * @Transactional is used to mark the method as a transactional method.
      */
 
     /**
      * Updates the details of an existing patient in the database.
      * @param patient The patient object to be updated.
-     * @Transactional is used to mark the method as a transactional method.
      * @return The updated patient object.
      * @throws PatientException if the patient object is null or if no patient is found with the given id.
      */
@@ -147,7 +147,6 @@ public class PatientService {
     /**
      * This method is used to delete patient by id.
      * @param id the id of the patient to be deleted.
-     * @Transactional is used to mark the method as a transactional method.
      * @throws PatientException if patient with id is not found.
      * @throws PatientException if patient has appointments.
      *
@@ -170,9 +169,5 @@ public class PatientService {
         log.info("Patient with id: {} deleted", id);
 
     }
-
-
-
-
 
 }
