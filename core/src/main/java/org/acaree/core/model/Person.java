@@ -15,12 +15,15 @@ import java.util.Objects;
  * Person class is a base class for all the people in the system.
  * It contains basic information about a person.
  * It is used as a base class for Doctor, Patient, etc.
- * @Entity annotation to mark the class as a persistent Java class.
- * @Getter and @Setter lombok annotations to generate getters and setters for all fields.
- * @NoArgsConstructor lombok annotation to generate a no-args constructor.
- * @Id annotation to mark the id field as the primary key.
- * @GeneratedValue annotation to configure the way of increment of the specified column(field).
- * @Slf4j lombok annotation to generate a logger field.
+ * {@code @Entity} annotation to mark the class as a persistent Java class.
+ * {code @Getter} and {code @Setter} lombok annotations to generate getters and setters for all fields.
+ * {@code @NoArgsConstructor} lombok annotation to generate a no-args constructor.
+ * {@code @Id} annotation to mark the id field as the primary key.
+ * {@code @GeneratedValue} annotation to configure the way of increment of the specified column(field).
+ * {@code @Slf4j} lombok annotation to generate a logger field.
+ * <p>It uses JPA annotations to map the Person class to the person table in the database.</p>
+ * @see Doctor
+ * @see Patient
  */
 @Slf4j
 @Entity

@@ -7,6 +7,7 @@ import org.acaree.core.model.Doctor;
 import org.acaree.core.model.Patient;
 import org.acaree.core.model.TimeSlot;
 import org.acaree.core.repository.PatientRepository;
+import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,8 +19,15 @@ import java.util.Optional;
 /**
  * This class is used to implement the business logic for the patient.
  * It is used to perform CRUD operations on the patient.
- * It is annotated with @Service annotation.
- * It is annotated with @Slf4j annotation to enable logging.
+ * {@code @Service} annotation is used to mark the class as a service.
+ * {@code @Slf4j} annotation is used to enable logging.
+ * {@code @Autowired} annotation is used to inject the PatientRepository dependency.
+ * {@code @Transactional} annotation is used to mark the method as a transactional method.
+ * <p> This class is used by the PatientController class.</p>
+ * <p> This class is used by the AppointmentService class.</p>
+ * <p> This class is used by the DoctorService class.</p>
+ * <p> This class is used by the TimeSlotService class.</p>
+ *
  */
 
 @Service
@@ -27,6 +35,11 @@ import java.util.Optional;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+
+    /**
+     * Constructor for PatientService.
+     * @param patientRepository the patient repository to be injected.
+     */
 
     @Autowired
     public PatientService(PatientRepository patientRepository) {
@@ -42,13 +55,13 @@ public class PatientService {
      * @param patient the patient to be saved.
      * @return the saved patient.
      * @throws PatientException if patient object is null.
-     * @Transactional is used to mark the method as a transactional method.
+     * {@code @Transactional} annotation is used to mark the method as a transactional method.
      */
 
     public Patient savePatient(Patient patient) {
         if (Objects.isNull(patient)) {
             log.error("Patient object cannot be null");
-            throw new PatientException("Patient object cannot be null");
+            throw new PatientException("Patient object cannot be null", ErrorType.PATIENT_INVALID_INPUT);
 
         }
         Patient savedPatient = patientRepository.save(patient);
@@ -65,59 +78,28 @@ public class PatientService {
      * doesn't get involved in the transaction.
      */
 
-    public Optional<Patient> getPatientById(long id) {
+    public Patient getPatientById(long id) {
         if (id < 0) {
-            throw new PatientException("Invalid patient ID");
+            throw new PatientException("Invalid patient ID", ErrorType.PATIENT_INVALID_INPUT);
         }
 
-        Optional<Patient> patient = patientRepository.findById(id);
-        if (!patient.isPresent()) {
-            throw new PatientException("Patient with id: " + id + " not found");
-        }
-        log.info("Retrieved patient with id: {}", id);
-        return patient;
-
-
-
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new PatientException("Patient with id: " + id + " not found",
+                        ErrorType.PATIENT_NOT_FOUND));
     }
+
 
     /**
      * This method is used to get all patients.
      * @return all patients.
      */
 
-    public Iterable<Patient> getAllPatients() {
+    public List<Patient> getAllPatients() {
         List<Patient> patients = patientRepository.findAll();
         patients.forEach(patient -> log.info("Retrieved patient with id: {}", patient.getId()));
 
         return patients;
     }
-
-    /**
-     * This method is used to delete a patient by id.
-     *
-     * @param id the id of the patient.
-     * @throws PatientException if patient with id is not found.
-     */
-
-    public void deletePatientById(long id) {
-        // Check if patient exists
-        Patient patient =
-                patientRepository.findById(id).orElseThrow(()
-                        -> new PatientException("Patient with id: " + id + " not found"));
-
-        // Delete patient
-        patientRepository.delete(patient);
-
-    }
-
-    /**
-     * This method is used to update a patient.
-     *
-     * @param patient the patient to be updated.
-     * @return the updated patient.
-     * @throws PatientException if patient object is null.
-     */
 
     /**
      * Updates the details of an existing patient in the database.
@@ -129,13 +111,15 @@ public class PatientService {
     @Transactional
     public Patient updatePatient(Patient patient) {
         if (Objects.isNull(patient)) {
-            throw new PatientException("Patient object cannot be null");
+            throw new PatientException("Patient object cannot be null",
+                    ErrorType.PATIENT_INVALID_INPUT);
         }
 
         // Check if patient exists
         long id = patient.getId();
         patientRepository.findById(id).orElseThrow(()
-                -> new PatientException("Patient with id: " + patient.getId() + " not found"));
+                -> new PatientException("Patient with id: " + patient.getId() + " not found",
+                        ErrorType.PATIENT_NOT_FOUND));
 
         // Update patient
         Patient updatedPatient = patientRepository.save(patient);
@@ -157,12 +141,13 @@ public class PatientService {
         // Check if patient exists
         Patient patient =
                 patientRepository.findById(id).orElseThrow(()
-                        -> new PatientException("Patient with id: " + id + " not found"));
+                        -> new PatientException("Patient with id: " + id + " not found",
+                                ErrorType.PATIENT_NOT_FOUND));
 
         // Check if patient has appointments
 
         if (patient.getAppointments() != null && !patient.getAppointments().isEmpty()) {
-            throw new PatientException("Patient with id: " + id + " has appointments");
+            throw new PatientException.PatientHasAppointmentsException("Patient with id: " + id + " has appointments");
         }
         // Delete patient
         patientRepository.deleteById(id);

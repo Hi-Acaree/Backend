@@ -8,14 +8,10 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * Repository for the TimeSlot class.
- * <p>
- *     This interface is used to access the database for the TimeSlot class.
- *     </p>
- *     <p>
- *         This interface is used by the TimeSlotService class.
- *
- *         </p>
+ * <p>Repository for the TimeSlot class.</p>
+ * <p> This interface is used to access the database for the TimeSlot class.</p>
+ * <p> This interface is used by the TimeSlotService class.</p>
+ * {@code @Repository} is used to indicate that the class provides the mechanism for storage, retrieval, search, update and delete operation on objects.
  */
 
 @Repository

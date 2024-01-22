@@ -17,11 +17,12 @@ import java.util.Optional;
 /**
  * Service class for TimeSlot entity
  * <p> This class is responsible for all the business logic related to TimeSlot entity</p>
- * <p> This class is annotated with @Service annotation to indicate that it is a service class</p>
- * <p> This class is annotated with @Slf4j annotation to enable logging</p>
- * <p> This class is annotated with @Transactional annotation to enable transaction management</p>
- * <p> This class is annotated with @PersistenceContext annotation to inject EntityManager</p>
- * <p> This class is annotated with @Autowired annotation to inject TimeSlotRepository</p>
+ * {@code @Service} annotation to mark the class as a service class
+ * {@code @Slf4j} annotation to enable logging
+ * {@code @PersistenceContext} annotation to inject the EntityManager
+ * {@code @Autowired} annotation to inject the TimeSlotRepository
+ * {@code @Transactional} annotation to mark the class as a transactional class
+ *
  */
 @Service
 @Slf4j
@@ -30,12 +31,24 @@ public class TimeSlotService {
     private EntityManager entityManager;
     private final TimeSlotRepository timeSlotRepository;
 
+    /**
+     * Constructor for TimeSlotService
+     * @param timeSlotRepository The TimeSlotRepository to be injected
+     */
+
     @Autowired
     public TimeSlotService(TimeSlotRepository timeSlotRepository) {
         this.timeSlotRepository = timeSlotRepository;
     }
 
     //== public methods ==
+
+    /**
+     * This method is used to find a time slot by its ID
+     * @param id The ID of the time slot to be found
+     * @return An optional of TimeSlot object
+     * @throws TimeSlotException if the ID is invalid or the time slot is not available
+     */
 
     @Transactional(readOnly = true)
     public Optional<TimeSlot> findAvailableTimeSlot(long id) throws TimeSlotException {
@@ -47,6 +60,12 @@ public class TimeSlotService {
                 .filter(timeSlot -> !timeSlot.isBooked())
                 .orElseThrow(() -> new TimeSlotException("Time slot with ID " + id + " not available or already booked")));
     }
+
+    /**
+     * This method is used to save a time slot
+     * @param timeSlot The time slot to be saved
+     * @throws TimeSlotException if the time slot is null or the start time is after the end time
+     */
 
 
     @Transactional

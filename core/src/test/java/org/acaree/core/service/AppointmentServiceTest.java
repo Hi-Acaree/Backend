@@ -127,7 +127,7 @@ class AppointmentServiceTest {
         Patient mockPatient = new Patient();
         TimeSlot mockTimeSlot = new TimeSlot();
 
-        when(patientService.getPatientById(patientId)).thenReturn(Optional.of(mockPatient));
+        when(patientService.getPatientById(patientId)).thenReturn(mockPatient);
         when(timeSlotService.findAvailableTimeSlot(timeSlotId)).thenReturn(Optional.of(mockTimeSlot));
 
         Appointment result = appointmentService.bookAppointmentByPatient(patientId, reason, timeSlotId);
@@ -146,18 +146,18 @@ class AppointmentServiceTest {
         long appointmentId = 1L;
         long doctorId = 1L;
         long timeSlotId = 1L;
-        long patientId = 1L;
 
         when(appointmentRepository.findById(appointmentId)).thenReturn(Optional.of(appointment));
-        when(patientService.getPatientById(patientId)).thenReturn(Optional.of(patient));
         when(doctorService.getDoctorById(doctorId)).thenReturn(Optional.of(doctor));
         when(timeSlotService.findAvailableTimeSlot(timeSlotId)).thenReturn(Optional.of(timeSlot));
 
-        appointmentService.assignDoctorToAppointment(appointmentId, patientId, doctorId, timeSlotId);
+        appointmentService.assignDoctorToAppointment(appointmentId, doctorId, timeSlotId);
 
         verify(timeSlotService).saveTimeSlot(any(TimeSlot.class));
         verify(appointmentRepository).save(any(Appointment.class));
         verify(appointmentNotificationPublisher).publishMessage(eq("appointment"), any());
+        assertEquals(doctor, appointment.getDoctor());
+        assertEquals(timeSlot, appointment.getTimeSlot());
 
         assertTrue(timeSlot.isBooked());
         assertTrue(appointment.isBooked());
@@ -182,7 +182,7 @@ void testUpdateAppointment_Success() {
 
     AppointmentService.AppointmentUpdateDTO updateDTO = new AppointmentService.AppointmentUpdateDTO(1L,"Updated reason", 2L, 2L, 1L, true);
     when(appointmentRepository.findById(1L)).thenReturn(Optional.of(appointment));
-    when(patientService.getPatientById(2L)).thenReturn(Optional.of(patient));
+    when(patientService.getPatientById(2L)).thenReturn(patient);
     when(doctorService.getDoctorById(1L)).thenReturn(Optional.of(doctor));
     when(timeSlotService.findAvailableTimeSlot(2L)).thenReturn(Optional.of(newTimeSlot));
     when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -346,7 +346,7 @@ void testUpdateAppointment_Success() {
         Period recurrencePeriod = Period.ofWeeks(1);
 
             when(patientService.getPatientById(anyLong()))
-                    .thenReturn(Optional.of(patient)); // Mocking patient retrieval
+                    .thenReturn(patient); // Mocking patient retrieval
 
             when(timeSlotService.findAvailableTimeSlot(anyLong()))
                     .thenReturn(Optional.of(timeSlot)); // Mocking available time slot

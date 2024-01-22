@@ -1,5 +1,6 @@
 package org.acaree.core.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,6 +26,7 @@ public class DoctorAvailability {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
@@ -35,6 +37,13 @@ public class DoctorAvailability {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "availability_id")
     private Set<TimeSlot> timeSlots = new HashSet<>();
+
+    /**
+     * Constructor for DoctorAvailability.
+     * @param doctor the doctor.
+     * @param dayOfWeek the day of the week.
+     * @param timeSlots the time slots.
+     */
 
     public DoctorAvailability(Doctor doctor, Doctor.DaysOfTheWeek dayOfWeek, Set<TimeSlot> timeSlots) {
         this.doctor = doctor;

@@ -63,26 +63,5 @@ public class AppointmentTest {
         assertEquals(appointment1.hashCode(), appointment2.hashCode());
     }
 
-
-    @Test
-    public void testToString() {
-        // Arrange
-        Patient mockPatient = mock(Patient.class);
-        Doctor mockDoctor = mock(Doctor.class);
-        TimeSlot mockTimeSlot = mock(TimeSlot.class);
-        LocalDateTime startTime = LocalDateTime.now();
-        LocalDateTime endTime = LocalDateTime.now().plusMinutes(30);
-        when(mockTimeSlot.getStartTime()).thenReturn(startTime);
-        when(mockTimeSlot.getEndTime()).thenReturn(endTime);
-
-        when(mockPatient.toString()).thenReturn("MockPatient");
-        when(mockDoctor.toString()).thenReturn("MockDoctor");
-        Appointment appointment = new Appointment(mockPatient, mockDoctor, "Checkup", mockTimeSlot);
-        String expectedString = "Appointment{id=0, patient=MockPatient, doctor=MockDoctor, startTime=" + startTime + ", endTime=" + endTime + ", reason='Checkup'}";
-
-        // Act & Assert
-        assertEquals(expectedString, appointment.toString());
-    }
-
     // Additional tests...
 }

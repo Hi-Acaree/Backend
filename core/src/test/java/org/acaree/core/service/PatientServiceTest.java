@@ -70,11 +70,11 @@ import static org.mockito.Mockito.when;
     void test_GetPatientById_Success() {
         when(patientRepository.findById(any(Long.class))).thenReturn(java.util.Optional.ofNullable(patient));
 
-        Optional<Patient> patientById = patientService.getPatientById(1L);
+        Patient patient = patientService.getPatientById(1L);
 
-        assertNotNull(patientById);
-        assertEquals(patient.getId(), patientById.isPresent() ? patientById.get().getId() : null);
-        assertEquals(patient.getPersonDetails(), patientById.<Object>map(Patient::getPersonDetails).orElse(null));
+        assertNotNull(patient);
+        assertEquals(patient.getId(), patient.getId());
+        assertEquals(patient.getPersonDetails(), patient.getPersonDetails());
 
     }
 

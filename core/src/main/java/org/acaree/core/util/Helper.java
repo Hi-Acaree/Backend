@@ -18,7 +18,7 @@ public class Helper {
      * @param personDetails The person for whom the business key is to be generated.
      * @return The business key for the person.
      */
-    public static String generateBusinessKey(@Valid Person personDetails) {
+    public static String generateBusinessKey(Person personDetails) {
         return personDetails.getEmail() + "_" + personDetails.getPhone();
     }
 
@@ -35,7 +35,7 @@ public class Helper {
      */
 
 
-    public static String generateBusinessKey(@Valid Appointment appointment) {
+    public static String generateBusinessKey(Appointment appointment) {
         // Formatting the time separately
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmm");
 

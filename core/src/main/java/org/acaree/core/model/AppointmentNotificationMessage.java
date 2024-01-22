@@ -5,10 +5,10 @@ import lombok.*;
 /**
  * This class is a model class for AppointmentNotificationMessage.
  * It contains information about an appointment notification message.
- * @Getter and @Setter lombok annotations to generate getters and setters for all fields.
- * @NoArgsConstructor lombok annotation to generate a no-args constructor.
- * @EqualsAndHashCode lombok annotation to generate equals and hashCode methods.
- * @ToString lombok annotation to generate toString method.
+ * {@code @Getter} and {@code @Setter} annotation to generate getter and setter methods for all fields.
+ * {@code @NoArgsConstructor} annotation to generate a no argument constructor.
+ * {@code @EqualsAndHashCode} annotation to generate equals and hashcode methods.
+ * {@code @ToString} annotation to generate toString method.
  *
  */
 @NoArgsConstructor
@@ -22,6 +22,14 @@ public class AppointmentNotificationMessage {
     private String message;
 
     // Constructor
+
+    /**
+     * Constructor for AppointmentNotificationMessage.
+     * @param appointmentId the appointment id.
+     * @param patientId the patient id.
+     * @param doctorId the doctor id.
+     * @param message the message.
+     */
     public AppointmentNotificationMessage(Long appointmentId, Long patientId, Long doctorId, String message) {
         this.appointmentId = appointmentId;
         this.patientId = patientId;

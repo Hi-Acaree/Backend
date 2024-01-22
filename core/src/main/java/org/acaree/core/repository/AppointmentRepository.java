@@ -9,13 +9,9 @@ import java.util.List;
 
 /**
  * Repository for the Appointment class.
- * <p>
- *     This interface is used to access the database for the Appointment class.
- *     </p>
- *     <p>
- *         This interface is used by the AppointmentService class.
- *
- *         </p>
+ * <p>This interface is used to access the database for the Appointment class.</p>
+ * <p>This interface is used by the AppointmentService class.</p>
+ * {@code @Repository} annotation to indicate that this class is a repository.
  */
 
 @Repository

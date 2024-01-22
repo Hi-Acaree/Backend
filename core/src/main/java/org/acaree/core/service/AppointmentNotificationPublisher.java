@@ -16,8 +16,14 @@ import org.springframework.stereotype.Service;
 public class AppointmentNotificationPublisher {
 
 
-    @Autowired
-    private JmsTemplate jmsTemplate;
+    private JmsTemplate jmsTemplate; // JMS template to be injected
+
+    /**
+     * Constructor for AppointmentNotificationPublisher.
+     * @param message the message to be published.
+     * @param destination the destination where the message is to be published.
+     * {@code @JmsTemplate} the JMS template to use.
+     */
 
     public void publishMessage(String destination, AppointmentNotificationMessage message) {
         jmsTemplate.convertAndSend(destination, message);

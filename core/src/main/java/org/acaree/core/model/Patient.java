@@ -33,12 +33,18 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person personDetails;
 
+
     @OneToMany(mappedBy = "patient")
     private List<Appointment> appointments;
+
+    /**
+     * Constructor for Patient.
+     * @param personDetails the person details.
+     */
 
     public Patient(Person personDetails) {
         this.personDetails = personDetails;

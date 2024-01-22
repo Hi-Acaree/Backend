@@ -12,14 +12,21 @@ import java.util.Objects;
 
 /**
  * Time slot for an appointment.
- * <p>
- *     This class represents a time slot for an appointment.
- *     </p>
- *     <p>
- *         This class is used by the Appointment class.
- *         </p>
+ * <p>This class represents a time slot for an appointment.</p>
+ * <p>It is marked as an entity and thus is a persistent Java class.</p>
+ * <p>It uses Lombok annotations to automatically generate getters, setters, and a no-argument constructor.</p>
+ * {@code @Entity} annotation to mark the class as a persistent Java class.
+ * {code @Getter} and {code @Setter} lombok annotations to generate getters and setters for all fields.
+ * {@code @NoArgsConstructor} lombok annotation to generate a no-args constructor.
+ * {@code @Id} annotation to mark the id field as the primary key.
+ * {@code @ManyToOne} annotation to mark the relationship between TimeSlot and DoctorAvailability.
+ * {@code @JoinColumn} annotation to mark the foreign key column.
+ * {@code @GeneratedValue} annotation to configure the way of increment of the specified column(field).
+ * {@code @Slf4j} lombok annotation to generate a logger field.
+ * <p>It uses JPA annotations to map the TimeSlot class to the time_slot table in the database.</p>
+ *
+ * @version 1.0
  */
-
 @Entity
 @Slf4j
 @Getter @Setter
@@ -31,8 +38,6 @@ public class TimeSlot {
 
     @Version
     private long version;
-
-    private LocalDateTimeJavaType localDateTimeJavaType;
 
     @Column(name = "start_time")
     private  LocalDateTime startTime;
@@ -47,12 +52,27 @@ public class TimeSlot {
     @JoinColumn(name = "availability_id")
     private DoctorAvailability availability;
 
+    /**
+     * Constructor for TimeSlot.
+     * @param startTime the start time.
+     * @param endTime the end time.
+     * @param isBooked the is booked.
+     */
+
     public TimeSlot(LocalDateTime startTime, LocalDateTime endTime,
     boolean isBooked) {
         this.startTime = startTime;
         this.endTime = endTime;
         this.isBooked = isBooked;
     }
+
+    /**
+     * Constructor for TimeSlot.
+     * @param startTime the start time.
+     * @param endTime the end time.
+     * @param isBooked the is booked.
+     * @param availability the availability.
+     */
 
     public TimeSlot(LocalDateTime startTime, LocalDateTime endTime, boolean isBooked, DoctorAvailability availability) {
 
@@ -61,6 +81,12 @@ public class TimeSlot {
         this.isBooked = isBooked;
         this.availability = availability;
     }
+
+    /**
+     * Constructor for TimeSlot.
+     * @param startTime the start time.
+     * @param endTime the end time.
+     */
 
     public TimeSlot(LocalDateTime startTime, LocalDateTime endTime) {
         this.startTime = startTime;

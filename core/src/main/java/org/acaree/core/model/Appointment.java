@@ -1,5 +1,6 @@
 package org.acaree.core.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,15 +15,10 @@ import java.util.Objects;
 /**
  * This class is a model class for Appointment.
  * It contains information about an appointment.
- * @Entity annotation to mark the class as a persistent Java class.
- * @Getter and @Setter lombok annotations to generate getters and setters for all fields.
- * @NoArgsConstructor lombok annotation to generate a no-args constructor.
- * @Id annotation to mark the id field as the primary key.
- * @ManyToOne annotation to mark the relationship between Appointment and Patient.
- * @ManyToOne annotation to mark the relationship between Appointment and Doctor.
- * @JoinColumn annotation to mark the foreign key column.
- * @GeneratedValue annotation to configure the way of increment of the specified column(field).
- * @Slf4j lombok annotation to generate a logger field.
+ * {@code @Entity} annotation to mark the class as a JPA entity.
+ * {@code @Table} annotation to provide the details of the table that this entity will be mapped to.
+ * {@code @Getter} and {@code @Setter} annotation to generate getter and setter methods for all fields.
+ * {@code @NoArgsConstructor} annotation to generate a no argument constructor.
  *
  */
 @Entity
@@ -39,9 +35,11 @@ public class Appointment {
     @JoinColumn(name = "patient_id")
     private Patient patient;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "doctor_id")
     private Doctor doctor;
+
 
     @ManyToOne
     @JoinColumn(name = "time_slot_id")
@@ -50,6 +48,14 @@ public class Appointment {
     private String reason;
 
     private boolean booked;
+
+    /**
+     * This is a constructor for the Appointment class.
+     * @param patient the patient.
+     * @param doctor the doctor.
+     * @param reason the reason for the appointment.
+     * @param timeSlot the time slot for the appointment.
+     */
 
     public Appointment(Patient patient, Doctor doctor, String reason, TimeSlot timeSlot) {
         this.patient = patient;
@@ -75,9 +81,6 @@ public class Appointment {
     @Override
     public String toString() {
         return "Appointment{" +
-                "id=" + id +
-                ", patient=" + (patient != null ? patient.toString() : "null") +
-                ", doctor=" + (doctor != null ? doctor.toString() : "null") +
                 ", startTime=" + (timeSlot != null ? timeSlot.getStartTime().toString() : "null") +
                 ", endTime=" + (timeSlot != null ? timeSlot.getEndTime().toString() : "null") +
                 ", reason='" + (reason != null ? reason : "null") + '\'' +

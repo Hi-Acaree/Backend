@@ -1,15 +1,16 @@
 package org.acaree.core.service;
 import jakarta.persistence.OptimisticLockException;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import org.acaree.core.exceptions.*;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.AppointmentRepository;
+import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Time;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.Period;
@@ -34,8 +35,18 @@ public class AppointmentService {
     private final PatientService patientService;
 
     private final DoctorService doctorService;
-    @Autowired
+
+
     private final AppointmentNotificationPublisher appointmentNotificationPublisher;
+
+    /**
+     * Constructor for AppointmentService.
+     * @param appointmentRepository the appointment repository to be injected.
+     * @param timeSlotService the time slot service to be injected.
+     * @param PatientService the patient service to be injected.
+     * @param doctorService the doctor service to be injected.
+     * @param appointmentNotificationPublisher the appointment notification publisher to be injected.
+     */
 
     @Autowired
     public AppointmentService(AppointmentRepository appointmentRepository,
@@ -59,22 +70,21 @@ public class AppointmentService {
      * @param patientId the patient id
      * @param reason the reason
      * @param timeSlotId the time slot id
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws PatientException if the patient is not found
+     * @throws TimeSlotException if the time slot is not available
      * @return the appointment
-     * @throws AppointmentBookingException the appointment booking exception
-     * @throws PatientException the patient exception
-     * @throws TimeSlotException the time slot exception
-     * @Transactional annotation to book the appointment for the database as a transaction
      */
 
     @Transactional
     public Appointment bookAppointmentByPatient(long patientId, String reason, long timeSlotId)
     throws AppointmentBookingException, PatientException, TimeSlotException{
         if (patientId < 0 || reason == null || timeSlotId < 0) {
-            throw new AppointmentBookingException("Invalid appointment details");
+            throw new AppointmentBookingException("Invalid appointment details",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
 
-        Patient patient = patientService.getPatientById(patientId)
-                .orElseThrow(() -> new PatientException("Patient with ID: " + patientId + " not found"));
+        Patient patient = patientService.getPatientById(patientId);
 
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
                 .orElseThrow(() -> new TimeSlotException("Time slot with ID: " + timeSlotId + " not found or already booked"));
@@ -93,43 +103,39 @@ public class AppointmentService {
     /** Schedule an appointment to a doctor by admin.
      * <p>This method is used to schedule an appointment to a doctor by admin.</p>
      * <p>This method is used by the AppointmentController class.</p>
-     *@param patientId the patient id
-     *@param doctorId the doctor id
-     *@param appointmentId the appointment id
-     *@param timeSlotId the time slot id
-     *@throws AppointmentBookingException the appointment booking exception
-     *@throws PatientException the patient exception
-     *@throws DoctorException the doctor exception
-     *@throws TimeSlotException the time slot exception
+     * @param doctorId the doctor id
+     * @param appointmentId the appointment id
+     * @param timeSlotId the time slot id
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws DoctorException if the doctor is not found
+     * @throws TimeSlotException if the time slot is not available
      */
 
     @Transactional
-    public void assignDoctorToAppointment(long appointmentId, long patientId, long doctorId, long timeSlotId)
-    throws AppointmentBookingException, PatientException, DoctorException, TimeSlotException{
+    public void assignDoctorToAppointment(long appointmentId, long doctorId, long timeSlotId)
+            throws AppointmentBookingException, DoctorException, TimeSlotException {
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AppointmentBookingException("Appointment not found"));
-        Patient patient = patientService.getPatientById(patientId)
-                .orElseThrow(() -> new PatientException("Patient not found"));
+                .orElseThrow(() -> new AppointmentBookingException("Appointment with ID " + appointmentId + " not found",
+                        ErrorType.APPOINTMENT_NOT_FOUND));
 
         Doctor doctor = doctorService.getDoctorById(doctorId)
-                .orElseThrow(() -> new DoctorException("Doctor not found"));
+                .orElseThrow(() -> new DoctorException("Doctor with ID " + doctorId + " not found", ErrorType.DOCTOR_NOT_FOUND));
 
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
-                .orElseThrow(() -> new TimeSlotException("Time slot not available"));
+                .orElseThrow(() -> new TimeSlotException("Time slot with ID " + timeSlotId + " not available or already booked"));
 
-        timeSlot.setBooked(true); // Mark the time slot as booked
+        timeSlot.setBooked(true);
         timeSlotService.saveTimeSlot(timeSlot);
 
         appointment.setDoctor(doctor);
-        appointment.setPatient(patient);
         appointment.setTimeSlot(timeSlot);
         appointment.setBooked(true);
         appointmentRepository.save(appointment);
 
-        // Publish the appointment notification
         AppointmentNotificationMessage message = getAppointmentNotificationMessage(appointment);
         appointmentNotificationPublisher.publishMessage("appointment", message);
     }
+
 
     /**
      * Reschedule an appointment.
@@ -138,6 +144,10 @@ public class AppointmentService {
      * @param appointmentId the appointment id
      * @param timeSlotId the time slot id
      * @param reasonForChange the reason for change
+     * @throws AppointmentBookingException if the appointment details are invalid or the appointment is not found
+     * @throws BookingCancelException if the appointment is already cancelled or not booked
+     * @throws TimeSlotException if the time slot is not available
+     * @throws OptimisticLockException if the appointment is updated by another user
      * @return the appointment
      */
 
@@ -146,14 +156,17 @@ public class AppointmentService {
             throws AppointmentBookingException, BookingCancelException, TimeSlotException,
             OptimisticLockException {
         if (appointmentId < 0 || reasonForChange == null || reasonForChange.isEmpty()) {
-            throw new AppointmentBookingException("Invalid details");
+            throw new AppointmentBookingException("Invalid details",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
 
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AppointmentBookingException("Appointment not found"));
+                .orElseThrow(() -> new AppointmentBookingException("Appointment not found",
+                        ErrorType.APPOINTMENT_NOT_FOUND));
 
         if (!appointment.isBooked()) {
-            throw new BookingCancelException("Appointment not scheduled or already cancelled");
+            throw new BookingCancelException("Appointment not scheduled or already cancelled",
+                    ErrorType.CANCEL_NOT_AVAILABLE);
         }
 
         TimeSlot newTimeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
@@ -167,8 +180,7 @@ public class AppointmentService {
         }
 
         long patientId = appointment.getPatient().getId();
-        Patient patient = patientService.getPatientById(patientId)
-                .orElseThrow(() -> new PatientException("Patient not found"));
+        Patient patient = patientService.getPatientById(patientId);
 
         newTimeSlot.setBooked(true); // Mark the time slot as booked
         timeSlotService.saveTimeSlot(newTimeSlot);
@@ -190,8 +202,8 @@ public class AppointmentService {
      * <p>This method is used to cancel an appointment.</p>
      * <p>This method is used by the AppointmentController class.</p>
      * @param appointmentId the appointment id
-     * @throws AppointmentBookingException the appointment booking exception
-     * @throws BookingCancelException the booking cancel exception
+     * @throws AppointmentBookingException if the appointment details are invalid or the appointment is not found
+     * @throws BookingCancelException if the appointment is already cancelled or not booked
      * @return boolean
      */
 
@@ -199,15 +211,18 @@ public class AppointmentService {
     public boolean cancelAppointment(long appointmentId) throws AppointmentBookingException, BookingCancelException {
         // Input validation
         if (appointmentId < 0) {
-            throw new AppointmentBookingException("Invalid appointment id");
+            throw new AppointmentBookingException("Invalid appointment id",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
         // Get the appointment from the database
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AppointmentBookingException("Appointment not found"));
+                .orElseThrow(() -> new AppointmentBookingException("Appointment not found",
+                        ErrorType.APPOINTMENT_NOT_FOUND));
 
         // Check if the appointment is already cancelled
         if (!appointment.isBooked()) {
-            throw new BookingCancelException("Appointment not scheduled or already cancelled");
+            throw new BookingCancelException("Appointment not scheduled or already cancelled",
+                    ErrorType.CANCEL_NOT_AVAILABLE);
 
         }
 
@@ -237,24 +252,27 @@ public class AppointmentService {
      * <p>This method is used by the AppointmentController class.</p>
      * @param updateDTO the appointment update data transfer object
      * @return the appointment
-     * @throws AppointmentBookingException the appointment booking exception
-     * @Transactional annotation to update the appointment for the database as a transaction
+     * @throws AppointmentBookingException if the appointment details are invalid or the appointment is not found
+     * {@code @Transactional} annotation to update the appointment for the database as a transaction
      */
 
     @Transactional
     public Appointment updateAppointment(AppointmentUpdateDTO updateDTO) throws AppointmentBookingException {
     // Input validation
     if (Objects.isNull(updateDTO)) {
-        throw new AppointmentBookingException("Invalid appointment details");
+        throw new AppointmentBookingException("Invalid appointment details",
+                ErrorType.APPOINTMENT_INVALID_INPUT);
     }
     long appointmentId = updateDTO.getId();
     if (appointmentId < 0) {
-        throw new AppointmentBookingException("Invalid appointment id");
+        throw new AppointmentBookingException("Invalid appointment id",
+                ErrorType.APPOINTMENT_INVALID_INPUT);
     }
 
     // Retrieve the existing appointment
     Appointment appointment = appointmentRepository.findById(appointmentId)
-            .orElseThrow(() -> new AppointmentBookingException("Appointment not found"));
+            .orElseThrow(() -> new AppointmentBookingException("Appointment not found",
+                    ErrorType.APPOINTMENT_NOT_FOUND));
 
     // Update the appointment details
     appointment.setReason(updateDTO.getReason());
@@ -262,9 +280,9 @@ public class AppointmentService {
 
     // Update the patient
     long patientId = updateDTO.getPatientId();
-    Optional<Patient> patient = patientService.getPatientById(patientId);
+    Patient patient = patientService.getPatientById(patientId);
 
-    appointment.setPatient(patient.orElse(null));
+    appointment.setPatient(patient);
 
     // Update the doctor
     long doctorId = updateDTO.getDoctorId();
@@ -290,17 +308,19 @@ public class AppointmentService {
     /**
      * Get an appointment by id.
      * @param appointmentId the appointment id
+     * {@code @Transactional} annotation to get the appointment for the database as a transaction
      * @return the appointment
-     * @Trasactional annotation to get the appointment for the database as a transaction
-     * read only annotation to get the appointment for the database as a read only transaction
+
      */
     @Transactional(readOnly = true)
     public Appointment getAppointment(long appointmentId) throws AppointmentBookingException {
         if (appointmentId < 0) {
-            throw new AppointmentBookingException("Invalid appointment id");
+            throw new AppointmentBookingException("Invalid appointment id",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
         return appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new AppointmentBookingException("Appointment not found"));
+                .orElseThrow(() -> new AppointmentBookingException("Appointment not found",
+                        ErrorType.APPOINTMENT_NOT_FOUND));
 
 
 
@@ -308,9 +328,8 @@ public class AppointmentService {
 
     /**
      * Get all appointments.
+     * {@code @Transactional} annotation to get all appointments for the database as a transaction
      * @return the list of appointments
-     * @Transactional annotation to get all appointments for the database as a transaction
-     * read only annotation to get all appointments for the database as a read only transaction
      */
 
     @Transactional(readOnly = true)
@@ -324,14 +343,14 @@ public class AppointmentService {
      * Get all appointments by doctor id.
      * @param doctorId the doctor id
      * @return the list of appointments for the doctor
-     * @Transactional annotation to get all appointments by doctor id for the database as a transaction
-     * read only annotation to get all appointments by doctor id for the database as a read only transaction
+     * {@code @Transactional} annotation to get all appointments by doctor id for the database as a transaction
      */
 
     @Transactional(readOnly = true)
     public List<Appointment> getAllAppointmentsByDoctorId(long doctorId) throws AppointmentBookingException {
         if (doctorId < 0) {
-            throw new AppointmentBookingException("Invalid doctor id");
+            throw new AppointmentBookingException("Invalid doctor id",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
         return appointmentRepository.findDoctorAppointment(doctorId);
 
@@ -342,15 +361,16 @@ public class AppointmentService {
     /**
      * Get all appointments by patient id.
      * @param patientId the patient id
+     *{@code @Transactional} annotation to get all appointments by patient id for the database as a transaction
      * @return the list of appointments for the patient
-     * @Transactional annotation to get all appointments by patient id for the database as a transaction
      */
 
 
     @Transactional(readOnly = true)
     public List<Appointment> getAllAppointmentsByPatientId(long patientId) throws AppointmentBookingException {
         if (patientId < 0) {
-            throw new AppointmentBookingException("Invalid patient id");
+            throw new AppointmentBookingException("Invalid patient id",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
         return appointmentRepository.findPatientAppointment(patientId);
 
@@ -366,9 +386,9 @@ public class AppointmentService {
      * @param numberOfAppointments the number of appointments
      * @param recurrencePeriod the frequency of appointments
      * @return the list of appointments
-     * @throws AppointmentBookingException the appointment booking exception
-     * @throws PatientException the patient exception
-     * @throws TimeSlotException the time slot exception
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws PatientException if the patient is not found
+     * @throws TimeSlotException if the time slot is not available
      */
 
     @Transactional
@@ -376,7 +396,8 @@ public class AppointmentService {
        String reason, long timeSlotId, int numberOfAppointments, Period recurrencePeriod)
             throws AppointmentBookingException, PatientException, TimeSlotException {
         if (patientId < 0 || reason == null || timeSlotId < 0 || numberOfAppointments <= 0) {
-            throw new AppointmentBookingException("Invalid appointment details");
+            throw new AppointmentBookingException("Invalid appointment details",
+                    ErrorType.APPOINTMENT_INVALID_INPUT);
         }
 
         List<Appointment> appointments = new ArrayList<>();
@@ -567,8 +588,12 @@ public class AppointmentService {
     /**
      * The type Appointment update dto (data transfer object).
      * <p>This class is used to update an appointment.</p>
+     * {@link AppointmentService#updateAppointment(AppointmentUpdateDTO)}
+     * {@code @Getter} and {@code @Setter} annotations to generate getters and setters for the fields
+     * {@code @AllArgsConstructor} annotation to generate a constructor with all arguments
      */
     @Getter @Setter
+    @AllArgsConstructor
     public static final class AppointmentUpdateDTO{
         private long id;
         private String reason;
@@ -576,15 +601,6 @@ public class AppointmentService {
         private long patientId;
         private long doctorId;
         private boolean booked;
-
-        public AppointmentUpdateDTO(long id, String reason, long timeSlotId, long patientId, long doctorId, boolean booked) {
-            this.id = id;
-            this.reason = reason;
-            this.timeSlotId = timeSlotId;
-            this.patientId = patientId;
-            this.doctorId = doctorId;
-            this.booked = booked;
-        }
 
 
 
