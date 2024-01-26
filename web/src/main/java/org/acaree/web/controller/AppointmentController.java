@@ -5,7 +5,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.model.Appointment;
+import org.acaree.core.model.Doctor;
+import org.acaree.core.model.TimeSlot;
 import org.acaree.core.service.AppointmentService;
+import org.acaree.core.service.TimeSlotService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,8 +24,12 @@ import static org.springframework.http.HttpStatus.CREATED;
 public class AppointmentController {
     private final AppointmentService appointmentService;
 
-    public AppointmentController(AppointmentService appointmentService) {
+    private final TimeSlotService timeSlotService;
+
+    public AppointmentController(AppointmentService appointmentService,
+                                 TimeSlotService timeSlotService) {
         this.appointmentService = appointmentService;
+        this.timeSlotService = timeSlotService;
     }
 
 
@@ -112,6 +119,14 @@ public class AppointmentController {
             @ApiResponse(responseCode = "404", description = "Appointment not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
+
+    @GetMapping(GET_AVAILABLE_TIME_SLOTS_FOR_DOCTOR_DAY_URL)
+    public ResponseEntity<List<TimeSlot>> getAvailableTimeSlotsForDoctorDay(
+            @RequestParam("doctorId") Long doctorId,
+            @RequestParam("day") Doctor.DaysOfTheWeek day) {
+        log.info("Inside getAvailableTimeSlotsForDoctorDay() method of AppointmentController class");
+        return ResponseEntity.ok().body(timeSlotService.findAvailableTimeSlotsForDoctorAndDay(doctorId, day));
+    }
 
     @GetMapping(GET_APPOINTMENT_BY_ID_URL)
     public ResponseEntity<Appointment> getAppointmentById(@PathVariable("id") Long id) {

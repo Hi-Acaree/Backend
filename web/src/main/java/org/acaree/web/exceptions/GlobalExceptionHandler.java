@@ -1,10 +1,7 @@
 package org.acaree.web.exceptions;
 
 import lombok.extern.slf4j.Slf4j;
-import org.acaree.core.exceptions.AppointmentBookingException;
-import org.acaree.core.exceptions.BookingCancelException;
-import org.acaree.core.exceptions.DoctorException;
-import org.acaree.core.exceptions.PatientException;
+import org.acaree.core.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -90,6 +87,33 @@ public class GlobalExceptionHandler {
             case CANCEL_NOT_AVAILABLE:
                 status = HttpStatus.CONFLICT;
                 log.error("Cancel has appointments", ex);
+                break;
+            default:
+                status = HttpStatus.BAD_REQUEST;
+                log.error("Bad request", ex);
+        }
+        ErrResponse errorResponse = new ErrResponse(status, ex.getMessage());
+        return new ResponseEntity<>(errorResponse, status);
+    }
+
+    @ExceptionHandler(TimeSlotException.class)
+    public ResponseEntity<ErrResponse> handleTimeSlotException(TimeSlotException ex, WebRequest request) {
+        HttpStatus status;
+        switch (ex.getErrorType()) {
+            case TIMESLOT_NOT_FOUND:
+                status = HttpStatus.NOT_FOUND;
+                log.error("TimeSlot not found", ex);
+                break;
+            case TIMESLOT_NOT_AVAILABLE:
+            case TIMESLOT_ALREADY_BOOKED:
+            case TIMESLOT_NOT_BOOKED:
+            case TIMESLOT_NOT_AVAILABLE_FOR_DOCTOR:
+            case TIMESLOT_NOT_AVAILABLE_FOR_PATIENT:
+            case TIMESLOT_NOT_AVAILABLE_FOR_DOCTOR_AND_PATIENT:
+            case TIMESLOT_NOT_AVAILABLE_FOR_DOCTOR_AND_PATIENT_AND_APPOINTMENT:
+            case TIMESLOT_NOT_AVAILABLE_FOR_DOCTOR_AND_APPOINTMENT:
+                status = HttpStatus.CONFLICT;
+                log.error(String.valueOf(ex));
                 break;
             default:
                 status = HttpStatus.BAD_REQUEST;

@@ -87,7 +87,8 @@ public class AppointmentService {
         Patient patient = patientService.getPatientById(patientId);
 
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
-                .orElseThrow(() -> new TimeSlotException("Time slot with ID: " + timeSlotId + " not found or already booked"));
+                .orElseThrow(() -> new TimeSlotException("Time slot with ID: " + timeSlotId + " not found or already booked",
+                        ErrorType.TIMESLOT_NOT_FOUND));
 
         Appointment appointment = new Appointment();
         appointment.setPatient(patient);
@@ -122,7 +123,8 @@ public class AppointmentService {
                 .orElseThrow(() -> new DoctorException("Doctor with ID " + doctorId + " not found", ErrorType.DOCTOR_NOT_FOUND));
 
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
-                .orElseThrow(() -> new TimeSlotException("Time slot with ID " + timeSlotId + " not available or already booked"));
+                .orElseThrow(() -> new TimeSlotException("Time slot with ID " + timeSlotId + " not available or already booked",
+                        ErrorType.TIMESLOT_NOT_FOUND));
 
         timeSlot.setBooked(true);
         timeSlotService.saveTimeSlot(timeSlot);
@@ -170,7 +172,8 @@ public class AppointmentService {
         }
 
         TimeSlot newTimeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
-                .orElseThrow(() -> new TimeSlotException("Time slot not available"));
+                .orElseThrow(() -> new TimeSlotException("Time slot not available",
+                        ErrorType.TIMESLOT_NOT_AVAILABLE));
 
         // Free the old time slot
         TimeSlot oldTimeSlot = appointment.getTimeSlot();
@@ -295,7 +298,8 @@ public class AppointmentService {
         if (appointment.getTimeSlot() == null || appointment.getTimeSlot().getId() != timeSlotId) {
             Optional<TimeSlot> timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId);
             if (timeSlot.get().isBooked() && !isTimeSlotCurrentlyAssignedToAppointment(appointment, timeSlot.get())) {
-                throw new TimeSlotException("Time slot not available");
+                throw new TimeSlotException("Time slot not available",
+                        ErrorType.TIMESLOT_NOT_AVAILABLE);
             }
             appointment.setTimeSlot(timeSlot.get());
         }
@@ -411,7 +415,8 @@ public class AppointmentService {
 
             Optional<TimeSlot> availableTimeSlot = timeSlotService.findAvailableTimeSlot(nextTimeSlot.getId());
             if (!availableTimeSlot.isPresent()) {
-                throw new TimeSlotException("Time slot not available");
+                throw new TimeSlotException("Time slot not available",
+                        ErrorType.TIMESLOT_NOT_AVAILABLE);
             } else {
                 nextTimeSlot = availableTimeSlot.get();
                 timeSlotService.saveTimeSlot(nextTimeSlot);

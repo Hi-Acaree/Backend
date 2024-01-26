@@ -1,6 +1,7 @@
 package org.acaree.controller;
 import org.acaree.core.model.*;
 import org.acaree.core.service.AppointmentService;
+import org.acaree.core.service.TimeSlotService;
 import org.acaree.web.controller.AppointmentController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,9 @@ public class AppointmentControllerTest {
 
     @MockBean
     private AppointmentService appointmentService;
+
+    @MockBean
+    private TimeSlotService timeSlotService;
 
     @Autowired
     private MockMvc mockMvc;

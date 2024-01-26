@@ -5,12 +5,18 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.TimeSlotException;
+import org.acaree.core.model.Doctor;
+import org.acaree.core.model.DoctorAvailability;
 import org.acaree.core.model.TimeSlot;
+import org.acaree.core.repository.DoctorAvailabilityRepository;
 import org.acaree.core.repository.TimeSlotRepository;
+import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -31,14 +37,19 @@ public class TimeSlotService {
     private EntityManager entityManager;
     private final TimeSlotRepository timeSlotRepository;
 
+    private final DoctorAvailabilityService doctorAvailabilityService;
+
     /**
      * Constructor for TimeSlotService
      * @param timeSlotRepository The TimeSlotRepository to be injected
+     * @param doctorAvailabilityService The DoctorAvailability service to be injected
      */
 
     @Autowired
-    public TimeSlotService(TimeSlotRepository timeSlotRepository) {
+    public TimeSlotService(TimeSlotRepository timeSlotRepository, DoctorAvailabilityService doctorAvailabilityService) {
+
         this.timeSlotRepository = timeSlotRepository;
+        this.doctorAvailabilityService = doctorAvailabilityService;
     }
 
     //== public methods ==
@@ -54,11 +65,12 @@ public class TimeSlotService {
     public Optional<TimeSlot> findAvailableTimeSlot(long id) throws TimeSlotException {
         if (id < 0) {
             log.error("Invalid TimeSlot ID: {}", id);
-            throw new TimeSlotException("Invalid TimeSlot ID: " + id);
+            throw new TimeSlotException("Invalid TimeSlot ID: " + id, ErrorType.TIMESLOT_INVALID_INPUT);
         }
         return Optional.ofNullable(timeSlotRepository.findById(id)
                 .filter(timeSlot -> !timeSlot.isBooked())
-                .orElseThrow(() -> new TimeSlotException("Time slot with ID " + id + " not available or already booked")));
+                .orElseThrow(() -> new TimeSlotException("Time slot with ID " + id + " not available or already booked",
+                        ErrorType.TIMESLOT_NOT_AVAILABLE)));
     }
 
     /**
@@ -72,17 +84,57 @@ public class TimeSlotService {
     public void saveTimeSlot(TimeSlot timeSlot) throws TimeSlotException {
         if (Objects.isNull(timeSlot)) {
             log.error("TimeSlot object cannot be null");
-            throw new TimeSlotException("TimeSlot object cannot be null");
+            throw new TimeSlotException("TimeSlot object cannot be null",
+                    ErrorType.TIMESLOT_INVALID_INPUT);
         }
         if (timeSlot.getStartTime().isAfter(timeSlot.getEndTime()) || timeSlot.getStartTime().equals(timeSlot.getEndTime())) {
             log.error("Invalid time slot: Start time must be before end time.");
-            throw new TimeSlotException("Invalid time slot: Start time must be before end time.");
+            throw new TimeSlotException("Invalid time slot: Start time must be before end time.",
+                    ErrorType.TIMESLOT_INVALID_INPUT);
         }
 
         timeSlotRepository.save(timeSlot);
         entityManager.refresh(timeSlot);
         log.info("TimeSlot saved successfully: {}", timeSlot);
     }
+
+    /**
+     * find all available time slots for a given day and this timeslot should not overlap with doctor's existing timeslots
+     * @param day the day of the timeslot
+     * @param doctorId the id of the doctor
+     * @return a list of available timeslots
+     * @throws TimeSlotException if the day is null or the doctorId is invalid
+     */
+
+    public List<TimeSlot> findAvailableTimeSlotsForDoctorAndDay(long doctorId, Doctor.DaysOfTheWeek day) throws TimeSlotException {
+        // Check if doctorId is valid
+        if (doctorId < 0) {
+            log.error("Invalid Doctor ID: {}", doctorId);
+            throw new TimeSlotException("Invalid Doctor ID: " + doctorId,
+                    ErrorType.TIMESLOT_INVALID_INPUT);
+        }
+
+        // Fetch the DoctorAvailability for the given doctor and day
+        DoctorAvailability doctorAvailability =
+                doctorAvailabilityService.findDoctorAvailabilityByDayAndDoctorId(day, doctorId).orElseThrow();
+        if (doctorAvailability == null) {
+            log.error("Doctor availability not found for Doctor ID: {} and Day: {}", doctorId, day);
+            throw new TimeSlotException("Doctor availability not found for Doctor ID: " + doctorId + " and Day: " + day,
+                    ErrorType.TIMESLOT_NOT_AVAILABLE_FOR_DOCTOR);
+        }
+
+        // Filter available time slots
+        List<TimeSlot> availableTimeSlots = new ArrayList<>();
+        for (TimeSlot timeSlot : doctorAvailability.getTimeSlots()) {
+            if (!timeSlot.isBooked()) {
+                availableTimeSlots.add(timeSlot);
+            }
+        }
+
+        return availableTimeSlots;
+    }
+
+
 
 }
 

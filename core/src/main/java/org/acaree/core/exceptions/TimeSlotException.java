@@ -1,5 +1,8 @@
 package org.acaree.core.exceptions;
 
+import lombok.Getter;
+import org.acaree.core.util.ErrorType;
+
 /**
  * Exception for when a booking is attempted for a time slot that is already booked.
  * <p>
@@ -12,16 +15,28 @@ package org.acaree.core.exceptions;
  *
  */
 
-public class TimeSlotException extends CustomAppExceptions{
+public class TimeSlotException extends CustomAppExceptions {
     private String message; // error message
+    /**
+     * -- GETTER --
+     * Getter for errorType.
+     */
+    @Getter
+    private final ErrorType errorType;
 
     /**
      * Constructor for TimeSlotException.
+     *
      * @param message the error message.
+     * @param errorType the error type.
      */
 
     public TimeSlotException(
-            String message) {super(message);}
-
+            String message,
+            ErrorType errorType) {
+        super(message);
+        this.errorType = errorType;
+    }
 
 }
+

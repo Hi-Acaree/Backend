@@ -32,6 +32,7 @@ public class ApiMappings {
     public static final String GET_ALL_APPOINTMENTS_BY_DOCTOR_ID_URL = "/doctor/{doctorId}";
     public static final String GET_ALL_APPOINTMENTS_BY_PATIENT_ID_URL = "/patient/{patientId}";
     public static final String SCHEDULE_RECURRING_APPOINTMENT_URL = "/schedule/recurring";
+    public static final String GET_AVAILABLE_TIME_SLOTS_FOR_DOCTOR_DAY_URL = "/availableTimeSlots";
 
     //== PatientController ApiRoutes ==
     public static final String PATIENT_BASE_URL = "/api/v1/patient";

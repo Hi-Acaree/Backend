@@ -468,7 +468,8 @@ public class DoctorService {
             throws TimeSlotException{
         for (TimeSlot timeSlot : timeSlots) {
             if (timeSlot.getStartTime().isAfter(timeSlot.getEndTime())) {
-                throw new TimeSlotException("Invalid time slot: Start time must be before end time");
+                throw new TimeSlotException("Invalid time slot: Start time must be before end time",
+                        ErrorType.TIMESLOT_INVALID_INPUT);
             }}}
 
     /**
