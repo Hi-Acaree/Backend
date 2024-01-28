@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.util.Helper;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.Objects;
 
 /**
@@ -23,7 +20,8 @@ import java.util.Objects;
  */
 @Entity
 @Slf4j
-@Getter @Setter
+@Getter
+@Setter
 @NoArgsConstructor
 
 public class Appointment {
