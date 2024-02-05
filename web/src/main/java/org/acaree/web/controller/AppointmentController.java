@@ -1,14 +1,22 @@
 package org.acaree.web.controller;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.acaree.core.dto.AppointmentBookingDTO;
 import org.acaree.core.model.Appointment;
 import org.acaree.core.model.Doctor;
 import org.acaree.core.model.TimeSlot;
 import org.acaree.core.service.AppointmentService;
+<<<<<<< HEAD
 import org.acaree.core.service.TimeSlotService;
+=======
+import org.springframework.http.HttpStatus;
+>>>>>>> df32aee (Code refactoring)
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,29 +32,35 @@ import static org.springframework.http.HttpStatus.CREATED;
 public class AppointmentController {
     private final AppointmentService appointmentService;
 
+<<<<<<< HEAD
     private final TimeSlotService timeSlotService;
 
     public AppointmentController(AppointmentService appointmentService,
                                  TimeSlotService timeSlotService) {
+=======
+
+
+    public AppointmentController(AppointmentService appointmentService) {
+>>>>>>> df32aee (Code refactoring)
         this.appointmentService = appointmentService;
         this.timeSlotService = timeSlotService;
     }
 
 
+    @SneakyThrows
     @Operation(summary = "Book an appointment by patient", description = "This API is used to book an appointment by patient")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Appointment booked successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping(BOOK_APPOINTMENT_BY_PATIENT_URL)
-    public ResponseEntity<Appointment> bookAppointmentByPatient(
-            @PathVariable("patientId") Long patientId,
-            @PathVariable("timeSlotId") Long timeSlotId,
-            @RequestParam("reason") String reason) {
+    public ResponseEntity<Appointment> bookAppointmentByPatient(@Valid
+            @RequestBody AppointmentBookingDTO bookingDTO){
         log.info("Inside bookAppointmentByPatient() method of AppointmentController class");
-        return ResponseEntity.status(CREATED)
-                .body(appointmentService.bookAppointmentByPatient(patientId, reason, timeSlotId));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(appointmentService.bookAppointmentByPatient(bookingDTO));
     }
+
 
     @Operation(summary = "Assign appointment to doctor by admin", description = "This API is used to assign appointment to doctor by admin")
     @ApiResponses(value = {
@@ -60,12 +74,13 @@ public class AppointmentController {
     public ResponseEntity<Void> assignAppointmentToDoctor(
             @PathVariable("id") Long appointmentId,
             @PathVariable("doctorId") Long doctorId,
-            @PathVariable("timeSlotId") Long timeSlotId) {
+            @PathVariable("timeSlotId") Long timeSlotId) throws JsonProcessingException {
         log.info("Inside assignAppointmentToDoctor() method of AppointmentController class");
         appointmentService.assignDoctorToAppointment(appointmentId, doctorId,timeSlotId);
         return ResponseEntity.ok().build();
     }
 
+    @SneakyThrows
     @Operation(summary = "Reschedule appointment by patient", description = "This API is used to reschedule appointment by patient")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Appointment rescheduled successfully"),
@@ -84,6 +99,7 @@ public class AppointmentController {
         return ResponseEntity.ok().build();
     }
 
+    @SneakyThrows
     @Operation(summary = "Cancel appointment", description = "This API is used to cancel appointment")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Appointment cancelled successfully"),
@@ -170,6 +186,7 @@ public class AppointmentController {
         return ResponseEntity.ok().body(appointmentService.getAllAppointmentsByPatientId(id));
     }
 
+    @SneakyThrows
     @Operation(summary = "Schedule recurring appointments", description = "This API is used to schedule recurring appointments")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Appointments scheduled successfully"),
@@ -178,14 +195,14 @@ public class AppointmentController {
 
     @PostMapping(SCHEDULE_RECURRING_APPOINTMENT_URL)
     public ResponseEntity<Iterable<Appointment>> scheduleRecurringAppointment(
-            @RequestParam("timeSlotId") Long timeSlotId,
-            @RequestParam("patientId") Long patientId,
-            @RequestParam("reason") String reason,
-            @RequestParam("numberOfAppointments") int numberOfAppointments,
-            @RequestParam("frequency") Period frequency) {
+            @Valid @RequestBody AppointmentBookingDTO bookingDTO,
+            @NotNull @RequestParam("numberOfAppointments") int numberOfAppointments,
+            @NotNull @RequestParam("frequency") String frequency) {
         log.info("Inside scheduleRecurringAppointment() method of AppointmentController class");
-        return ResponseEntity.ok().body(appointmentService.scheduleReoccurringAppointments(patientId, reason, timeSlotId, numberOfAppointments, frequency));
+        Period periodFrequency = Period.parse(frequency); // Convert string to Period
+        return ResponseEntity.ok().body(appointmentService.scheduleReoccurringAppointments(bookingDTO, numberOfAppointments, periodFrequency));
     }
+
 
 
 

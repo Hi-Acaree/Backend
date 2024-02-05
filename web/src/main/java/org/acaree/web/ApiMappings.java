@@ -22,7 +22,8 @@ public class ApiMappings {
 
     //== AppointmentController ApiRoutes ==
     public static final String APPOINTMENT_BASE_URL = "/api/v1/appointment";
-    public static final String  BOOK_APPOINTMENT_BY_PATIENT_URL = "/book/patient/{patientId}/timeslot/{timeSlotId}";
+    public static final String BOOK_APPOINTMENT_BY_PATIENT_URL = "/book/appointment";
+
     public static final String ASSIGN_APPOINTMENT_TO_DOCTOR_URL = "/assign/{id}/doctor/{doctorId}/timeslot/{timeSlotId}";
     public static final String RESCHEDULE_APPOINTMENT_URL = "/reschedule/{id}/timeslot/{timeSlotId}";
     public static final String CANCEL_APPOINTMENT_URL = "/cancel/{id}";

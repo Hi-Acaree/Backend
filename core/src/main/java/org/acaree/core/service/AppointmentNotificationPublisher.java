@@ -14,8 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AppointmentNotificationPublisher {
-
-
+    @Autowired
     private JmsTemplate jmsTemplate; // JMS template to be injected
 
     /**
@@ -25,7 +24,7 @@ public class AppointmentNotificationPublisher {
      * {@code @JmsTemplate} the JMS template to use.
      */
 
-    public void publishMessage(String destination, AppointmentNotificationMessage message) {
+    public void publishMessage(String destination, String message) {
         jmsTemplate.convertAndSend(destination, message);
     }
 

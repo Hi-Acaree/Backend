@@ -2,16 +2,14 @@ package org.acaree.core.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.PatientException;
-import org.acaree.core.model.Appointment;
-import org.acaree.core.model.Doctor;
-import org.acaree.core.model.Patient;
-import org.acaree.core.model.TimeSlot;
+import org.acaree.core.model.*;
 import org.acaree.core.repository.PatientRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,6 +65,23 @@ public class PatientService {
         Patient savedPatient = patientRepository.save(patient);
         log.info("Saved patient with id: {}", savedPatient.getId());
         return savedPatient;
+    }
+
+    public Patient ensureTemporaryRecordOfPatient(String email) {
+        // Optional: Check if a patient with this email already exists to avoid duplicates
+        Optional<Patient> existingPatient = patientRepository.findByEmail(email);
+        if (existingPatient.isPresent()) {
+            return existingPatient.get();
+        }
+
+        // Create a new temporary patient record
+        Patient patient = new Patient();
+
+        patient.setPersonDetails(new Person("Anonymous", "", email, null));
+        patient.setExpiry(LocalDateTime.now().plusDays(1)); // Set expiry to 24 hours from now
+
+        // Save the temporary patient
+        return patientRepository.save(patient);
     }
 
     /**
@@ -154,5 +169,4 @@ public class PatientService {
         log.info("Patient with id: {} deleted", id);
 
     }
-
 }

@@ -1,11 +1,15 @@
 package org.acaree.core.service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import org.acaree.core.dto.AppointmentBookingDTO;
 import org.acaree.core.exceptions.*;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.AppointmentRepository;
+import org.acaree.core.repository.PatientRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +43,9 @@ public class AppointmentService {
 
     private final AppointmentNotificationPublisher appointmentNotificationPublisher;
 
+    private final ObjectMapper objectMapper;
+    private final PatientRepository patientRepository;
+
     /**
      * Constructor for AppointmentService.
      * @param appointmentRepository the appointment repository to be injected.
@@ -46,60 +53,76 @@ public class AppointmentService {
      * @param PatientService the patient service to be injected.
      * @param doctorService the doctor service to be injected.
      * @param appointmentNotificationPublisher the appointment notification publisher to be injected.
+     * @param objectMapper to use for deserialization.
+     * @param patientRepository the patient repository.
      */
 
     @Autowired
     public AppointmentService(AppointmentRepository appointmentRepository,
     TimeSlotService timeSlotService, PatientService PatientService,
         DoctorService doctorService,
-    AppointmentNotificationPublisher appointmentNotificationPublisher)
+    AppointmentNotificationPublisher appointmentNotificationPublisher,
+                              ObjectMapper objectMapper,
+                              PatientRepository patientRepository)
     {
         this.appointmentRepository = appointmentRepository;
         this.timeSlotService = timeSlotService;
         this.patientService = PatientService;
         this.doctorService = doctorService;
         this.appointmentNotificationPublisher = appointmentNotificationPublisher;
+        this.objectMapper = objectMapper;
+        this.patientRepository = patientRepository;
     }
 
     //== public methods ==
 
-    /** bookAppointmentByPatient method.
-     * Book an appointment by patient.
-     * <p>This method is used to book an appointment by patient.</p>
-     * <p>This method is used by the AppointmentController class.</p>
-     * @param patientId the patient id
-     * @param reason the reason
-     * @param timeSlotId the time slot id
-     * @throws AppointmentBookingException if the appointment details are invalid
-     * @throws PatientException if the patient is not found
-     * @throws TimeSlotException if the time slot is not available
-     * @return the appointment
-     */
 
     @Transactional
-    public Appointment bookAppointmentByPatient(long patientId, String reason, long timeSlotId)
-    throws AppointmentBookingException, PatientException, TimeSlotException{
-        if (patientId < 0 || reason == null || timeSlotId < 0) {
+    public Appointment bookAppointmentByPatient(AppointmentBookingDTO bookingDTO)
+            throws AppointmentBookingException, PatientException, TimeSlotException, JsonProcessingException {
+        if (Objects.isNull(bookingDTO)) {
             throw new AppointmentBookingException("Invalid appointment details",
                     ErrorType.APPOINTMENT_INVALID_INPUT);
         }
 
-        Patient patient = patientService.getPatientById(patientId);
+        // Ensure Temporary Patient Record based on Email
+        Patient patient = patientService.ensureTemporaryRecordOfPatient(bookingDTO.getPatientEmail());
 
+<<<<<<< HEAD
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
                 .orElseThrow(() -> new TimeSlotException("Time slot with ID: " + timeSlotId + " not found or already booked",
                         ErrorType.TIMESLOT_NOT_FOUND));
+=======
+        // Find or assign a doctor based on the doctorName - Implement this logic as per your application's requirement
+        Doctor doctor = doctorService.getDoctorById(bookingDTO.getDoctorId())
+                .orElseThrow(() -> new DoctorException("Doctor with Id " + bookingDTO.getDoctorId() + " not found",
+                        ErrorType.DOCTOR_NOT_FOUND));
+>>>>>>> df32aee (Code refactoring)
 
+        // Find the available time slot
+        TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(bookingDTO.getTimeSlotId())
+                .orElseThrow(() -> new TimeSlotException("Time slot with ID: " + bookingDTO.getTimeSlotId() + " not found or already booked"));
+
+        // Create and save the new appointment
         Appointment appointment = new Appointment();
         appointment.setPatient(patient);
-        appointment.setReason(reason);
+        appointment.setDoctor(doctor);
+        appointment.setReason(bookingDTO.getReason());
         appointment.setTimeSlot(timeSlot);
-        appointment.setBooked(false); // Not booked until a doctor is assigned
+        appointment.setBooked(true); // Assuming direct booking without further confirmation
 
-        appointmentRepository.save(appointment);
+        appointment = appointmentRepository.save(appointment);
+
+        // Prepare and send notification message
+        AppointmentNotificationMessage message = getAppointmentNotificationMessage(appointment);
+        String messageJson = objectMapper.writeValueAsString(message);
+        appointmentNotificationPublisher.publishMessage("appointment-queue", messageJson);
 
         return appointment;
     }
+
+
+
 
     /** Schedule an appointment to a doctor by admin.
      * <p>This method is used to schedule an appointment to a doctor by admin.</p>
@@ -114,7 +137,7 @@ public class AppointmentService {
 
     @Transactional
     public void assignDoctorToAppointment(long appointmentId, long doctorId, long timeSlotId)
-            throws AppointmentBookingException, DoctorException, TimeSlotException {
+            throws AppointmentBookingException, DoctorException, TimeSlotException, JsonProcessingException {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new AppointmentBookingException("Appointment with ID " + appointmentId + " not found",
                         ErrorType.APPOINTMENT_NOT_FOUND));
@@ -135,7 +158,9 @@ public class AppointmentService {
         appointmentRepository.save(appointment);
 
         AppointmentNotificationMessage message = getAppointmentNotificationMessage(appointment);
-        appointmentNotificationPublisher.publishMessage("appointment", message);
+        String messageJson = objectMapper.writeValueAsString(message);
+
+        appointmentNotificationPublisher.publishMessage("appointment-que" ,messageJson);
     }
 
 
@@ -156,7 +181,7 @@ public class AppointmentService {
     @Transactional
     public Appointment rescheduleAppointment(long appointmentId, String reasonForChange, long timeSlotId)
             throws AppointmentBookingException, BookingCancelException, TimeSlotException,
-            OptimisticLockException {
+            OptimisticLockException, JsonProcessingException {
         if (appointmentId < 0 || reasonForChange == null || reasonForChange.isEmpty()) {
             throw new AppointmentBookingException("Invalid details",
                     ErrorType.APPOINTMENT_INVALID_INPUT);
@@ -182,8 +207,7 @@ public class AppointmentService {
             timeSlotService.saveTimeSlot(oldTimeSlot);
         }
 
-        long patientId = appointment.getPatient().getId();
-        Patient patient = patientService.getPatientById(patientId);
+        Patient patient = appointment.getPatient();
 
         newTimeSlot.setBooked(true); // Mark the time slot as booked
         timeSlotService.saveTimeSlot(newTimeSlot);
@@ -195,7 +219,9 @@ public class AppointmentService {
 
         // Send a rescheduling notification
         AppointmentNotificationMessage message = sendAppointmentReschedule(appointment);
-        appointmentNotificationPublisher.publishMessage("appointment", message);
+        String messageJson = objectMapper.writeValueAsString(message);
+
+        appointmentNotificationPublisher.publishMessage("appointment-que", messageJson);
 
         return appointmentRepository.save(appointment);
     }
@@ -211,7 +237,7 @@ public class AppointmentService {
      */
 
     @Transactional
-    public boolean cancelAppointment(long appointmentId) throws AppointmentBookingException, BookingCancelException {
+    public boolean cancelAppointment(long appointmentId) throws AppointmentBookingException, BookingCancelException, JsonProcessingException {
         // Input validation
         if (appointmentId < 0) {
             throw new AppointmentBookingException("Invalid appointment id",
@@ -242,7 +268,7 @@ public class AppointmentService {
 
         // Publish the appointment cancellation notification
         AppointmentNotificationMessage message = sendAppointmentCancellation(appointment);
-        appointmentNotificationPublisher.publishMessage("appointment", message);
+        appointmentNotificationPublisher.publishMessage("appointment", objectMapper.writeValueAsString(message));
 
         return true;
 
@@ -384,9 +410,7 @@ public class AppointmentService {
      * Schedule Reoccurring appointments.
      * <p>This method is used to schedule reoccurring appointments.</p>
      * <p>This method is used by the AppointmentController class.</p>
-     * @param patientId the patient id
-     * @param reason the reason
-     * @param timeSlotId the time slot id
+     * @param bookingDTO the appointment booking data transfer object
      * @param numberOfAppointments the number of appointments
      * @param recurrencePeriod the frequency of appointments
      * @return the list of appointments
@@ -396,10 +420,9 @@ public class AppointmentService {
      */
 
     @Transactional
-    public List<Appointment> scheduleReoccurringAppointments(long patientId,
-       String reason, long timeSlotId, int numberOfAppointments, Period recurrencePeriod)
-            throws AppointmentBookingException, PatientException, TimeSlotException {
-        if (patientId < 0 || reason == null || timeSlotId < 0 || numberOfAppointments <= 0) {
+    public List<Appointment> scheduleReoccurringAppointments(AppointmentBookingDTO bookingDTO, int numberOfAppointments, Period recurrencePeriod)
+            throws AppointmentBookingException, PatientException, TimeSlotException, JsonProcessingException {
+        if (Objects.isNull(bookingDTO) || numberOfAppointments <= 0) {
             throw new AppointmentBookingException("Invalid appointment details",
                     ErrorType.APPOINTMENT_INVALID_INPUT);
         }
@@ -407,16 +430,21 @@ public class AppointmentService {
         List<Appointment> appointments = new ArrayList<>();
 
         for (int i = 0; i < numberOfAppointments; i++) {
-            Appointment appointment = bookAppointmentByPatient(patientId, reason, timeSlotId);
+            Appointment appointment = bookAppointmentByPatient(bookingDTO);
             appointments.add(appointment);
 
             TimeSlot currentSlot = appointment.getTimeSlot();
             TimeSlot nextTimeSlot = calculateNextAppointmentTime(currentSlot, recurrencePeriod);
 
             Optional<TimeSlot> availableTimeSlot = timeSlotService.findAvailableTimeSlot(nextTimeSlot.getId());
+<<<<<<< HEAD
             if (!availableTimeSlot.isPresent()) {
                 throw new TimeSlotException("Time slot not available",
                         ErrorType.TIMESLOT_NOT_AVAILABLE);
+=======
+            if (availableTimeSlot.isEmpty()) {
+                throw new TimeSlotException("Time slot not available");
+>>>>>>> df32aee (Code refactoring)
             } else {
                 nextTimeSlot = availableTimeSlot.get();
                 timeSlotService.saveTimeSlot(nextTimeSlot);
@@ -452,23 +480,28 @@ public class AppointmentService {
      */
 
     protected AppointmentNotificationMessage getAppointmentNotificationMessage(Appointment appointment) {
-        Objects.requireNonNull(appointment);
+        Objects.requireNonNull(appointment, "Appointment cannot be null.");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy 'at' h:mm a");
         String formattedStartTime = appointment.getTimeSlot().getStartTime().format(formatter);
 
+        String doctorName = Optional.ofNullable(appointment.getDoctor())
+                .map(doctor -> doctor.getPersonDetails().getFirstName() + " " + doctor.getPersonDetails().getLastName())
+                .orElse("Doctor");
+
         StringBuilder text = new StringBuilder();
         text.append("Hi ");
-        text.append("Your appointment has been booked for: ");
-        text.append(appointment.getTimeSlot().getStartTime().getDayOfWeek());
-        text.append("at: ");
-        text.append(formattedStartTime);
-        text.append("Thanks for using our service. ");
-        text.append("We look forward to seeing you.");
+        // Assuming patient name is available, append it for personalization
+        text.append(appointment.getPatient().getPersonDetails().getFirstName()).append(", ");
+        text.append("Your of type: ").append(appointment.getType()).append(" ");
+        text.append("has been booked for: ");
+        text.append(formattedStartTime).append(" ");
+        text.append("with: ").append(doctorName).append(". ");
+        text.append("Thanks for using our service. We look forward to seeing you.");
 
-        final var message = getNotificationMessage(appointment, text.toString());
-
-        return message;
+        // Assuming getNotificationMessage constructs and returns an AppointmentNotificationMessage
+        return getNotificationMessage(appointment, text.toString());
     }
+
 
     /** getNotificationMessage method.
      * Get the notification message.
@@ -487,9 +520,10 @@ public class AppointmentService {
             throw new IllegalStateException("Appointment does not have a patient associated with it.");
         }
         AppointmentNotificationMessage message = new AppointmentNotificationMessage();
-        message.setAppointmentId(appointment.getId());
-        message.setPatientId(appointment.getPatient().getId());
-        message.setDoctorId(appointment.getDoctor().getId());
+        message.setDoctorName(appointment.getDoctor().getPersonDetails().getFirstName() + " " + appointment.getDoctor().getPersonDetails().getLastName());
+        message.setEmail(appointment.getPatient().getPersonDetails().getEmail());
+        message.setAppointmentType(appointment.getType());
+        message.setTimeSlot(appointment.getTimeSlot());
         message.setMessage(text);
         return message;
     }
@@ -540,22 +574,25 @@ public class AppointmentService {
      * @return the appointment notification message
      */
     protected AppointmentNotificationMessage sendAppointmentReschedule(Appointment appointment) {
-        Objects.requireNonNull(appointment, "Invalid appointment");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy 'at' h:mm a");
-        String formattedStartTime = appointment.getTimeSlot().getStartTime().format(formatter);
+        var formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy 'at' h:mm a");
+        var formattedStartTime = appointment.getTimeSlot().getStartTime().format(formatter);
+
+        var doctorName = Optional.ofNullable(appointment.getDoctor())
+                .map(doctor -> doctor.getPersonDetails().getFirstName() + " " + doctor.getPersonDetails().getLastName())
+                .orElse("Doctor");
 
         StringBuilder text = new StringBuilder();
         text.append("Hi ");
-        text.append("Your appointment has been rescheduled to: ");
-        text.append(appointment.getTimeSlot().getStartTime().getDayOfWeek());
-        text.append("at: ");
-        text.append(formattedStartTime);
-        text.append("We look forward to seeing you.");
+        // Assuming patient name is available, append it for personalization
+        text.append(appointment.getPatient().getPersonDetails().getFirstName()).append(", ");
+        text.append("Your: ").append(appointment.getType()).append(" ");
+        text.append("has been rescheduled for: ");
+        text.append(formattedStartTime).append(" ");
+        text.append("with: ").append(doctorName).append(". ");
+        text.append("Thanks for using our service. We look forward to seeing you.");
 
+        return getNotificationMessage(appointment, text.toString());
 
-        final var message = getNotificationMessage(appointment, text.toString());
-
-        return message;
     }
 
     /** calculateNextAppointmentTime method.

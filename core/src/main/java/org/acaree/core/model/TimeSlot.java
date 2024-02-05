@@ -37,7 +37,7 @@ public class TimeSlot {
     private long id;
 
     @Version
-    private long version;
+    private long version = 0;
 
     @Column(name = "start_time")
     private  LocalDateTime startTime;
@@ -51,6 +51,9 @@ public class TimeSlot {
     @ManyToOne
     @JoinColumn(name = "availability_id")
     private DoctorAvailability availability;
+
+    @Column(name = "date")
+    private LocalDateTime date;
 
     /**
      * Constructor for TimeSlot.
@@ -91,6 +94,13 @@ public class TimeSlot {
     public TimeSlot(LocalDateTime startTime, LocalDateTime endTime) {
         this.startTime = startTime;
         this.endTime = endTime;
+    }
+
+    // getDate method is used to get the date of the time slot.
+    public LocalDateTime getDate() {
+        log.info("Getting date from time slot {}", startTime.toLocalDate().atStartOfDay());
+        return startTime.toLocalDate().atStartOfDay();
+
     }
 
     // equals and hashCode methods are overridden to compare two TimeSlot objects

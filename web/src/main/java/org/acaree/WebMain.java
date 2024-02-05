@@ -1,9 +1,10 @@
 package org.acaree;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication(scanBasePackages = {"org.acaree.core", "org.acaree.web.controller"})
+@SpringBootApplication
 public class WebMain {
 
     public static void main(String[] args) {

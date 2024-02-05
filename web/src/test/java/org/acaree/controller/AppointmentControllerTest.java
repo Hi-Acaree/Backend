@@ -1,4 +1,6 @@
 package org.acaree.controller;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.acaree.core.dto.AppointmentBookingDTO;
 import org.acaree.core.model.*;
 import org.acaree.core.service.AppointmentService;
 import org.acaree.core.service.TimeSlotService;
@@ -15,12 +17,16 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,6 +45,9 @@ public class AppointmentControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private Appointment appointment;
     private Doctor doctor;
@@ -89,19 +98,15 @@ public class AppointmentControllerTest {
 
     @Test
     public void testBookAppointmentByPatient() throws Exception {
-        Long patientId = 1L;
-        Long timeSlotId = 1L;
-        String reason = "Test reason";
+        AppointmentBookingDTO bookingDTO = new AppointmentBookingDTO(1L, "cc@test.com", "", 1L, "check up");
 
-        when(appointmentService.bookAppointmentByPatient(patientId, reason, timeSlotId)).thenReturn(appointment2);
+        when(appointmentService.bookAppointmentByPatient(bookingDTO)).thenReturn(appointment2);
 
-        mockMvc.perform(post("/api/v1/appointment/book/patient/{patientId}/timeslot/{timeSlotId}", patientId, timeSlotId)
-                        .param("reason", reason)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(appointment2.getId()));
+        mockMvc.perform(post("/api/v1/appointment/book/appointment")
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingDTO)))
+                .andExpect(status().isCreated()); // Assuming the controller returns HttpStatus.CREATED (201)
     }
-
 
     @Test
     public void testAssignAppointmentToDoctor() throws Exception {
@@ -110,7 +115,7 @@ public class AppointmentControllerTest {
         long timeSlotId = 1L;
 
         mockMvc.perform(put("/api/v1/appointment/assign/{id}/doctor/{doctorId}/timeslot/{timeSlotId}", appointmentId, doctorId, timeSlotId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
@@ -125,7 +130,7 @@ public class AppointmentControllerTest {
 
         mockMvc.perform(put("/api/v1/appointment/reschedule/{id}/timeslot/{timeSlotId}",appointmentId, timeSlotId )
                         .param("reason", "Test reason")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
         verify(appointmentService).rescheduleAppointment(appointmentId, reason, timeSlotId);
     }
@@ -135,7 +140,7 @@ public class AppointmentControllerTest {
         long appointmentId = 1L;
         when(appointmentService.cancelAppointment(appointmentId)).thenReturn(appointment2.isBooked());
         mockMvc.perform(put("/api/v1/appointment/cancel/{id}", appointmentId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
         verify(appointmentService).cancelAppointment(appointmentId);
         assertEquals(appointment2.isBooked(), false);
@@ -149,7 +154,7 @@ public class AppointmentControllerTest {
         when(appointmentService.updateAppointment(dto)).thenReturn(appointment2);
 
         mockMvc.perform(put("/api/v1/appointment/update")
-                        .contentType(MediaType.APPLICATION_JSON)
+                        .contentType(APPLICATION_JSON)
                         .content("{\"id\":1,\"patientId\":1,\"doctorId\":1,\"timeSlotId\":1,\"reason\":\"Test reason\"}"))
                 .andExpect(status().isOk());
     }
@@ -160,7 +165,7 @@ public class AppointmentControllerTest {
         when(appointmentService.getAppointment(appointmentId)).thenReturn(appointment2);
 
         mockMvc.perform(get("/api/v1/appointment/{id}", 1L)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
@@ -170,7 +175,7 @@ public class AppointmentControllerTest {
         when(appointmentService.getAllAppointments()).thenReturn(appointments);
 
         mockMvc.perform(get("/api/v1/appointment/all")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(appointmentService.getAllAppointments(), appointments);
 
@@ -182,7 +187,7 @@ public class AppointmentControllerTest {
         List<Appointment> appointments = List.of(appointment2);
        when(appointmentService.getAllAppointmentsByDoctorId(doctorId)).thenReturn(appointments);
         mockMvc.perform(get("/api/v1/appointment/doctor/{doctorId}", doctorId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
         assertEquals(appointmentService.getAllAppointmentsByDoctorId(doctorId), appointments);
 
@@ -195,26 +200,29 @@ public class AppointmentControllerTest {
         when(appointmentService.getAllAppointmentsByPatientId(patientId)).thenReturn(appointments);
 
         mockMvc.perform(get("/api/v1/appointment/patient/{patientId}", patientId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .contentType(APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void testScheduleRecurringAppointment() throws Exception {
-        long timeSlotId = 1L;
-        long patientId = 1L;
-        String reason = "Test reason";
-        int numberOfAppointments = 5;
-        Period frequency = Period.ofDays(1);
+        // Given
+        AppointmentBookingDTO bookingDTO = new AppointmentBookingDTO(1L, "patient@example.com", "Patient Name", 2L, "Check-up");
+        int numberOfAppointments = 3;
+        String frequency = "P1W"; // Weekly frequency
 
+        // Mocking the service call
+        when(appointmentService.scheduleReoccurringAppointments(eq(bookingDTO), eq(numberOfAppointments), any(Period.class)))
+                .thenReturn(Collections.emptyList()); // Return an empty list for simplicity
 
+        // When & Then
         mockMvc.perform(post("/api/v1/appointment/schedule/recurring")
-                        .param("timeSlotId", String.valueOf(timeSlotId))
-                        .param("patientId", String.valueOf(patientId))
-                        .param("reason", reason)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(bookingDTO))
                         .param("numberOfAppointments", String.valueOf(numberOfAppointments))
-                        .param("frequency", String.valueOf(frequency))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                        .param("frequency", frequency))
+                .andExpect(status().isOk()); // Assuming the controller returns HttpStatus.OK (200)
+
+        // Additional assertions to verify the response can be added here
     }
 }

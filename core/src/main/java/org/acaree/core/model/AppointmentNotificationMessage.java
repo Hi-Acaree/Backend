@@ -2,6 +2,9 @@ package org.acaree.core.model;
 
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 /**
  * This class is a model class for AppointmentNotificationMessage.
  * It contains information about an appointment notification message.
@@ -13,27 +16,31 @@ import lombok.*;
  */
 @NoArgsConstructor
 @Getter @Setter
-@EqualsAndHashCode(of = {"appointmentId", "patientId", "doctorId", "message"})
+@EqualsAndHashCode(of = {"doctorName", "appointmentType", "timeSlot", "message"})
 @ToString
 public class AppointmentNotificationMessage {
-    private Long appointmentId;
-    private Long patientId;
-    private Long doctorId;
+    private String doctorName;
+    private String email;
+    private String appointmentType;
+    private TimeSlot timeSlot;
     private String message;
 
     // Constructor
 
     /**
      * Constructor for AppointmentNotificationMessage.
-     * @param appointmentId the appointment id.
-     * @param patientId the patient id.
-     * @param doctorId the doctor id.
+     * @param doctorName the name of the doctor.
+     * @param email the email of the patient.
+     * @param appointmentType the type of appointment. i.e., virtual or inPerson.
+     * @param timeSlot the time slot of the appointment.
      * @param message the message.
      */
-    public AppointmentNotificationMessage(Long appointmentId, Long patientId, Long doctorId, String message) {
-        this.appointmentId = appointmentId;
-        this.patientId = patientId;
-        this.doctorId = doctorId;
+    public AppointmentNotificationMessage(String doctorName, String email, String appointmentType, TimeSlot timeSlot,
+                                          String message) {
+        this.doctorName = doctorName;
+        this.email = email;
+        this.appointmentType = appointmentType;
+        this.timeSlot = timeSlot;
         this.message = message;
     }
 }

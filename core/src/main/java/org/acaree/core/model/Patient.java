@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,6 +41,8 @@ public class Patient {
 
     @OneToMany(mappedBy = "patient")
     private List<Appointment> appointments;
+
+    private LocalDateTime expiry;
 
     /**
      * Constructor for Patient.

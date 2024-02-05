@@ -44,6 +44,7 @@ public class Appointment {
     private TimeSlot timeSlot;
 
     private String reason;
+    private String type;
 
     private boolean booked;
 
