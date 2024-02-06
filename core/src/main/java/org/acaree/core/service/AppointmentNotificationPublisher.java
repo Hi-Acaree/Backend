@@ -17,6 +17,8 @@ public class AppointmentNotificationPublisher {
     @Autowired
     private JmsTemplate jmsTemplate; // JMS template to be injected
 
+
+
     /**
      * Constructor for AppointmentNotificationPublisher.
      * @param message the message to be published.

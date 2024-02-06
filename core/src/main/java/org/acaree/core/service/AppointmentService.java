@@ -5,6 +5,7 @@ import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.dto.AppointmentBookingDTO;
 import org.acaree.core.exceptions.*;
 import org.acaree.core.model.*;
@@ -31,6 +32,7 @@ import java.util.Optional;
  */
 
 @Service
+@Slf4j
 public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
 
@@ -76,6 +78,18 @@ public class AppointmentService {
 
     //== public methods ==
 
+    /**
+     * Book an appointment by patient.
+     * <p>This method is used to book an appointment by patient.</p>
+     * <p>This method is used by the AppointmentController class.</p>
+     * @param bookingDTO the appointment booking data transfer object
+     * @return the appointment
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws PatientException if the patient is not found
+     * @throws TimeSlotException if the time slot is not available
+     * @throws JsonProcessingException if the appointment notification message cannot be processed
+     */
+
 
     @Transactional
     public Appointment bookAppointmentByPatient(AppointmentBookingDTO bookingDTO)
@@ -86,7 +100,7 @@ public class AppointmentService {
         }
 
         // Ensure Temporary Patient Record based on Email
-        Patient patient = patientService.ensureTemporaryRecordOfPatient(bookingDTO.getPatientEmail());
+        Patient patient = patientService.ensureTemporaryRecordOfPatient(bookingDTO.getEmail());
 
 <<<<<<< HEAD
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
@@ -525,6 +539,8 @@ public class AppointmentService {
         message.setAppointmentType(appointment.getType());
         message.setTimeSlot(appointment.getTimeSlot());
         message.setMessage(text);
+        log.info("Appointment notification message: {}", message);
+
         return message;
     }
 

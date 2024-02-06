@@ -22,6 +22,7 @@ import java.util.Properties;
 @ComponentScan(basePackages = {"org.acaree.core.repository, " +
         "org.acaree.core.service, org.acaree.core.model" + "org.acaree.core.notification"})
 public class AppConfig {
+    //== beans ==
     @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -35,8 +36,8 @@ public class AppConfig {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost("smtp.office365.com");
         mailSender.setPort(587);
-        mailSender.setUsername("mushtaq.hussain@sunknowledge.com");
-        mailSender.setPassword("m@h$11%01#46");
+        mailSender.setUsername(System.getenv("EMAIL_FROM"));
+        mailSender.setPassword(System.getenv("EMAIL_PASSWORD"));
         mailSender.setProtocol("smtp");
         Properties properties = mailSender.getJavaMailProperties();
         properties.put("mail.smtp.auth", "true");

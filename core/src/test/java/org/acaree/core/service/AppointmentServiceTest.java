@@ -132,7 +132,7 @@ class AppointmentServiceTest {
         AppointmentBookingDTO appointmentBookingDTO = new AppointmentBookingDTO(1L, "cc@tt.com",
                 "Jane Doe", 1L, "Checkup");
 
-        when(patientService.ensureTemporaryRecordOfPatient(appointmentBookingDTO.getPatientEmail())).thenReturn(patient);
+        when(patientService.ensureTemporaryRecordOfPatient(appointmentBookingDTO.getEmail())).thenReturn(patient);
         when(doctorService.getDoctorById(appointmentBookingDTO.getDoctorId())).thenReturn(Optional.of(doctor));
         when(timeSlotService.findAvailableTimeSlot(appointmentBookingDTO.getTimeSlotId())).thenReturn(Optional.of(timeSlot));
         when(appointmentRepository.save(any(Appointment.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -142,7 +142,7 @@ class AppointmentServiceTest {
         assertNotNull(result);
         assertEquals(appointmentBookingDTO.getReason(), result.getReason());
         assertEquals(appointmentBookingDTO.getDoctorId(), result.getDoctor().getId());
-        assertEquals(appointmentBookingDTO.getPatientEmail(), result.getPatient().getPersonDetails().getEmail());
+        assertEquals(appointmentBookingDTO.getEmail(), result.getPatient().getPersonDetails().getEmail());
          assertEquals(appointmentBookingDTO.getPatientName(), result.getPatient().getPersonDetails().getFirstName() + " " + result.getPatient().getPersonDetails().getLastName());
         assertEquals(appointmentBookingDTO.getTimeSlotId(), result.getTimeSlot().getId());
         assertTrue(result.isBooked());

@@ -6,19 +6,28 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.model.TimeSlot;
 
+/**
+ * This class is a model class for AppointmentBookingDTO.
+ * It contains information about an appointment booking.
+ * {@code @Getter} and {@code @Setter} annotation to generate getter and setter methods for all fields.
+ * {@code @NoArgsConstructor} annotation to generate a no argument constructor.
+ * {@code @Slf4j} annotation to generate a logger field.
+ *
+ */
+
 @Slf4j
 @Getter @Setter
 @NoArgsConstructor
 public class AppointmentBookingDTO {
     private long doctorId;
-    private String patientEmail;
+    private String email;
     private String patientName;
     private long timeSlotId;
     private String reason;
 
     public AppointmentBookingDTO(long doctorId, String patientEmail, String patientName, long timeSlotId, String reason) {
         this.doctorId = doctorId;
-        this.patientEmail = patientEmail;
+        this.email = patientEmail;
         this.patientName = patientName;
         this.timeSlotId = timeSlotId;
         this.reason = reason;
