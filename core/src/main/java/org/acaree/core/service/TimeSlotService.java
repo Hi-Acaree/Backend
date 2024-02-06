@@ -119,11 +119,6 @@ public class TimeSlotService {
         // Fetch the DoctorAvailability for the given doctor and day
         DoctorAvailability doctorAvailability =
                 doctorAvailabilityService.findDoctorAvailabilityByDayAndDoctorId(day, doctorId).orElseThrow();
-        if (doctorAvailability == null) {
-            log.error("Doctor availability not found for Doctor ID: {} and Day: {}", doctorId, day);
-            throw new TimeSlotException("Doctor availability not found for Doctor ID: " + doctorId + " and Day: " + day,
-                    ErrorType.TIMESLOT_NOT_AVAILABLE_FOR_DOCTOR);
-        }
 
         // Filter available time slots
         List<TimeSlot> availableTimeSlots = new ArrayList<>();
