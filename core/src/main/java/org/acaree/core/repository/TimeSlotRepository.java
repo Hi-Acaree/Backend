@@ -1,7 +1,11 @@
 package org.acaree.core.repository;
 import org.acaree.core.model.TimeSlot;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import java.time.LocalDateTime;
+import java.util.Optional;
 
 /**
  * <p>Repository for the TimeSlot class.</p>
@@ -12,5 +16,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
-
+    @Query("SELECT t FROM TimeSlot t WHERE t.startTime = ?1")
+    Optional<TimeSlot> findByStartTime(LocalDateTime startTime);
 }

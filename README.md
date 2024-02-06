@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 - 👋 Hi, this is Acaree.
 - Here lies the back-end infrastructure for virtual clinic
@@ -6,6 +7,9 @@
 =======
 <<<<<<< HEAD
 >>>>>>> b91c998 (read me file changes)
+=======
+
+>>>>>>> c6286e6 (code refactoring)
 - 👋 Hi, this is Acaree
 - Here lies the back-end infrastructure for virtual clinic
 - Currently in phase 1, with the digital appointment booking system

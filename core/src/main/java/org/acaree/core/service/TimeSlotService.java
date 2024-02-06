@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -133,6 +135,30 @@ public class TimeSlotService {
 
         return availableTimeSlots;
     }
+
+    protected TimeSlot findOrCreateNextAvailableTimeSlot(LocalDateTime startTime, Period recurrencePeriod) {
+        // Calculate the end time based on your business logic. For example, if each slot is 1 hour:
+        LocalDateTime endTime = startTime.plusHours(1); // Adjust this based on actual duration
+
+        // Try to find an existing time slot that starts at the given startTime
+        Optional<TimeSlot> existingTimeSlot = timeSlotRepository.findByStartTime(startTime);
+
+        if (existingTimeSlot.isPresent()) {
+            // Found an existing time slot that matches the criteria
+            return existingTimeSlot.get();
+        } else {
+            // No existing time slot found, create a new one
+            TimeSlot newTimeSlot = new TimeSlot();
+            newTimeSlot.setStartTime(startTime);
+            newTimeSlot.setEndTime(endTime);
+            // Set any other necessary properties of TimeSlot here
+
+            // Save the new time slot to the database
+            TimeSlot savedTimeSlot = timeSlotRepository.save(newTimeSlot);
+            return savedTimeSlot;
+        }
+    }
+
 
 
 
