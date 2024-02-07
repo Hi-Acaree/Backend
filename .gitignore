@@ -98,4 +98,5 @@ Desktop.ini
 
 ### Others ###
 # Add here other files you want to ignore (logs, configurations, etc.)
+application-dev.properties
 
