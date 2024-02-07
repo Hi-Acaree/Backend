@@ -26,6 +26,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Service class for Appointment entity
+ * <p> This class is responsible for all the business logic related to Appointment entity</p>
+ */
+
 @Service
 @Slf4j
 public class AppointmentService {
@@ -50,6 +55,18 @@ public class AppointmentService {
         this.objectMapper = objectMapper;
         this.patientRepository = patientRepository;
     }
+
+    //== public methods ==
+
+    /**
+     * This method is used to book an appointment by a patient
+     * @param bookingDTO The details of the appointment to be booked
+     * @return The appointment that has been booked
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws PatientException if the patient details are invalid
+     * @throws TimeSlotException if the time slot details are invalid
+     * @throws JsonProcessingException if there is an error processing the JSON
+     */
 
     @Transactional
     public Appointment bookAppointmentByPatient(AppointmentBookingDTO bookingDTO)
@@ -83,6 +100,17 @@ public class AppointmentService {
         return appointment;
     }
 
+    /**
+     * This method is used to assign a doctor to an appointment
+     * @param appointmentId The ID of the appointment
+     * @param doctorId The ID of the doctor
+     * @param timeSlotId The ID of the time slot
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws DoctorException if the doctor details are invalid
+     * @throws TimeSlotException if the time slot details are invalid
+     * @throws JsonProcessingException if there is an error processing the JSON
+     */
+
     @Transactional
     public void assignDoctorToAppointment(long appointmentId, long doctorId, long timeSlotId)
             throws AppointmentBookingException, DoctorException, TimeSlotException, JsonProcessingException {
@@ -109,6 +137,19 @@ public class AppointmentService {
         String messageJson = objectMapper.writeValueAsString(message);
         appointmentNotificationPublisher.publishMessage("appointment-queue", messageJson);
     }
+
+    /**
+     * This method is used to reschedule an appointment
+     * @param appointmentId The ID of the appointment
+     * @param reasonForChange The reason for the change
+     * @param timeSlotId The ID of the time slot
+     * @return The rescheduled appointment
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws BookingCancelException if the booking cannot be cancelled
+     * @throws TimeSlotException if the time slot details are invalid
+     * @throws OptimisticLockException if there is an optimistic lock exception
+     * @throws JsonProcessingException if there is an error processing the JSON
+     */
 
     @Transactional
     public Appointment rescheduleAppointment(long appointmentId, String reasonForChange, long timeSlotId)
@@ -148,6 +189,15 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
+    /**
+     * This method is used to cancel an appointment
+     * @param appointmentId The ID of the appointment
+     * @return true if the appointment is cancelled, false otherwise
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws BookingCancelException if the booking cannot be cancelled
+     * @throws JsonProcessingException if there is an error processing the JSON
+     */
+
     @Transactional
     public boolean cancelAppointment(long appointmentId) throws AppointmentBookingException, BookingCancelException, JsonProcessingException {
         if (appointmentId < 0) {
@@ -175,6 +225,13 @@ public class AppointmentService {
 
         return true;
     }
+
+    /**
+     * This method is used to update an appointment
+     * @param updateDTO The details of the appointment to be updated
+     * @return The updated appointment
+     * @throws AppointmentBookingException if the appointment details are invalid
+     */
 
     @Transactional
     public Appointment updateAppointment(AppointmentUpdateDTO updateDTO) throws AppointmentBookingException {
@@ -208,6 +265,13 @@ public class AppointmentService {
         return appointmentRepository.save(appointment);
     }
 
+    /**
+     * This method is used to get an appointment by its ID
+     * @param appointmentId The ID of the appointment
+     * @return The appointment
+     * @throws AppointmentBookingException if the appointment details are invalid
+     */
+
     @Transactional(readOnly = true)
     public Appointment getAppointment(long appointmentId) throws AppointmentBookingException {
         if (appointmentId < 0) {
@@ -217,10 +281,22 @@ public class AppointmentService {
                 .orElseThrow(() -> new AppointmentBookingException("Appointment not found", ErrorType.APPOINTMENT_NOT_FOUND));
     }
 
+    /**
+     * This method is used to get all appointments
+     * @return A list of all appointments
+     */
+
     @Transactional(readOnly = true)
     public List<Appointment> getAllAppointments() {
         return appointmentRepository.findAll();
     }
+
+    /**
+     * This method is used to get all appointments by doctor ID
+     * @param doctorId The ID of the doctor
+     * @return A list of all appointments by doctor ID
+     * @throws AppointmentBookingException if the doctor ID is invalid
+     */
 
     @Transactional(readOnly = true)
     public List<Appointment> getAllAppointmentsByDoctorId(long doctorId) throws AppointmentBookingException {
@@ -230,6 +306,13 @@ public class AppointmentService {
         return appointmentRepository.findDoctorAppointment(doctorId);
     }
 
+    /**
+     * This method is used to get all appointments by patient ID
+     * @param patientId The ID of the patient
+     * @return A list of all appointments by patient ID
+     * @throws AppointmentBookingException if the patient ID is invalid
+     */
+
     @Transactional(readOnly = true)
     public List<Appointment> getAllAppointmentsByPatientId(long patientId) throws AppointmentBookingException {
         if (patientId < 0) {
@@ -237,6 +320,18 @@ public class AppointmentService {
         }
         return appointmentRepository.findPatientAppointment(patientId);
     }
+
+    /**
+     * This method is used to schedule reoccurring appointments
+     * @param bookingDTO The details of the appointment to be booked
+     * @param numberOfAppointments The number of appointments to be scheduled
+     * @param recurrencePeriod The period of recurrence
+     * @return A list of all scheduled appointments
+     * @throws AppointmentBookingException if the appointment details are invalid
+     * @throws PatientException if the patient details are invalid
+     * @throws TimeSlotException if the time slot details are invalid
+     * @throws JsonProcessingException if there is an error processing the JSON
+     */
 
     @Transactional
     public List<Appointment> scheduleReoccurringAppointments(AppointmentBookingDTO bookingDTO, int numberOfAppointments, Period recurrencePeriod)
@@ -265,10 +360,24 @@ public class AppointmentService {
         return appointments;
     }
 
+    /**
+     *
+     * @param appointment The appointment whose time slot is to be validated
+     * @param timeSlot The time slot to be validated
+     * @return true if the time slot is valid, false otherwise
+     */
+
+
 
     private boolean isTimeSlotCurrentlyAssignedToAppointment(Appointment appointment, TimeSlot timeSlot) {
         return appointment.getTimeSlot() != null && appointment.getTimeSlot().getId() == timeSlot.getId();
     }
+
+    /**
+     * This method is used to get the appointment notification message
+     * @param appointment The appointment
+     * @return The appointment notification message
+     */
 
     protected AppointmentNotificationMessage getAppointmentNotificationMessage(Appointment appointment) {
         Objects.requireNonNull(appointment, "Appointment cannot be null.");
@@ -289,6 +398,13 @@ public class AppointmentService {
         return getNotificationMessage(appointment, text.toString());
     }
 
+    /**
+     * This method is used to get the notification message
+     * @param appointment The appointment
+     * @param text The text of the notification message
+     * @return The appointment notification message
+     */
+
     protected AppointmentNotificationMessage getNotificationMessage(Appointment appointment, String text) {
         if (appointment == null || text == null || text.isEmpty()) {
             throw new NotificationException("Invalid appointment or text");
@@ -303,6 +419,12 @@ public class AppointmentService {
         return new AppointmentNotificationMessage(doctorName, email, appointmentType, appointment.getTimeSlot(), text);
     }
 
+    /**
+     * This method is used to send an appointment reminder
+     * @param appointment The appointment
+     * @return The appointment notification message
+     */
+
     protected AppointmentNotificationMessage sendAppointmentReminder(Appointment appointment) {
         Objects.requireNonNull(appointment, "Invalid appointment");
         LocalDateTime now = LocalDateTime.now();
@@ -312,11 +434,23 @@ public class AppointmentService {
         return getNotificationMessage(appointment, text);
     }
 
+    /**
+     * This method is used to send an appointment cancellation
+     * @param appointment The appointment
+     * @return The appointment notification message
+     */
+
     protected AppointmentNotificationMessage sendAppointmentCancellation(Appointment appointment) {
         Objects.requireNonNull(appointment, "Invalid appointment");
         String text = "Hi, Your appointment has been cancelled. We are sorry for any inconvenience caused.";
         return getNotificationMessage(appointment, text);
     }
+
+    /**
+     * This method is used to send an appointment reschedule
+     * @param appointment The appointment
+     * @return The appointment notification message
+     */
 
     protected AppointmentNotificationMessage sendAppointmentReschedule(Appointment appointment) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy 'at' h:mm a");
@@ -326,6 +460,13 @@ public class AppointmentService {
         return getNotificationMessage(appointment, text);
     }
 
+    /**
+     * This method is used to calculate the next appointment time
+     * @param currentSlot The current time slot
+     * @param recurrencePeriod The period of recurrence
+     * @return The next appointment time
+     */
+
     protected TimeSlot calculateNextAppointmentTime(TimeSlot currentSlot, Period recurrencePeriod) {
         Objects.requireNonNull(currentSlot, "Invalid time slot");
         LocalDateTime nextStartTime = currentSlot.getStartTime().plus(recurrencePeriod);
@@ -333,6 +474,10 @@ public class AppointmentService {
         // Assuming TimeSlot has a constructor or setters to set these properties.
         return new TimeSlot(nextStartTime, nextEndTime);
     }
+
+    /**
+     * This static class is used to represent the appointment booking DTO
+     */
 
     @Getter
     @Setter

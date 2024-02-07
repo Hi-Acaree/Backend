@@ -12,11 +12,8 @@ import org.acaree.core.model.Appointment;
 import org.acaree.core.model.Doctor;
 import org.acaree.core.model.TimeSlot;
 import org.acaree.core.service.AppointmentService;
-<<<<<<< HEAD
 import org.acaree.core.service.TimeSlotService;
-=======
 import org.springframework.http.HttpStatus;
->>>>>>> df32aee (Code refactoring)
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +21,6 @@ import java.time.Period;
 import java.util.List;
 
 import static org.acaree.web.ApiMappings.*;
-import static org.springframework.http.HttpStatus.CREATED;
 
 @Slf4j
 @RestController
@@ -32,16 +28,10 @@ import static org.springframework.http.HttpStatus.CREATED;
 public class AppointmentController {
     private final AppointmentService appointmentService;
 
-<<<<<<< HEAD
     private final TimeSlotService timeSlotService;
 
     public AppointmentController(AppointmentService appointmentService,
                                  TimeSlotService timeSlotService) {
-=======
-
-
-    public AppointmentController(AppointmentService appointmentService) {
->>>>>>> df32aee (Code refactoring)
         this.appointmentService = appointmentService;
         this.timeSlotService = timeSlotService;
     }

@@ -133,7 +133,7 @@ public class TimeSlotService {
 
     protected TimeSlot findOrCreateNextAvailableTimeSlot(LocalDateTime startTime, Period recurrencePeriod) {
         // Calculate the end time based on your business logic. For example, if each slot is 1 hour:
-        LocalDateTime endTime = startTime.plusHours(1); // Adjust this based on actual duration
+        LocalDateTime endTime = startTime.plusMinutes(30); // Adjust this based on actual duration
 
         // Try to find an existing time slot that starts at the given startTime
         Optional<TimeSlot> existingTimeSlot = timeSlotRepository.findByStartTime(startTime);

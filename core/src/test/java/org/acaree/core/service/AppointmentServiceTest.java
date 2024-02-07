@@ -165,7 +165,7 @@ class AppointmentServiceTest {
 
         verify(timeSlotService).saveTimeSlot(any(TimeSlot.class));
         verify(appointmentRepository).save(any(Appointment.class));
-        verify(appointmentNotificationPublisher).publishMessage(eq("appointment-que"), any());
+        verify(appointmentNotificationPublisher).publishMessage(eq("appointment-queue"), any());
         assertEquals(doctor, appointment.getDoctor());
         assertEquals(timeSlot, appointment.getTimeSlot());
 
@@ -384,7 +384,7 @@ void testUpdateAppointment_Success() {
         assertEquals(true, rescheduledAppointment.getTimeSlot().isBooked());
 
         verify(timeSlotService, times(2)).saveTimeSlot(any(TimeSlot.class));
-        verify(appointmentNotificationPublisher).publishMessage(eq("appointment-que"), eq("notification message"));
+        verify(appointmentNotificationPublisher).publishMessage(eq("appointment-queue"), eq("notification message"));
 
         ArgumentCaptor<TimeSlot> timeSlotCaptor = ArgumentCaptor.forClass(TimeSlot.class);
         verify(timeSlotService, times(2)).saveTimeSlot(timeSlotCaptor.capture());
