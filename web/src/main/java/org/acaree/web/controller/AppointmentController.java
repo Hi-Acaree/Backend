@@ -13,6 +13,7 @@ import org.acaree.core.model.Doctor;
 import org.acaree.core.model.TimeSlot;
 import org.acaree.core.service.AppointmentService;
 import org.acaree.core.service.TimeSlotService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,7 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     private final TimeSlotService timeSlotService;
+
 
     public AppointmentController(AppointmentService appointmentService,
                                  TimeSlotService timeSlotService) {

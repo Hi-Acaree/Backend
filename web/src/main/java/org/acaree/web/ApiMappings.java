@@ -43,5 +43,11 @@ public class ApiMappings {
     public static final String GET_PATIENT_BY_ID_URL = "/{id}";
     public static final String GET_ALL_PATIENTS_URL = "/all";
 
+    //== Person Controller ApiRoutes ==
+
+    public static final String PERSON_BASE_URL = "/api/v1/person";
+    public static final String UPLOAD_IMAGE_URL = "/{id}/image";
+    public static final String GET_IMAGE_URL = "/{id}/image";
+
 
 }

@@ -1,5 +1,6 @@
 package org.acaree.core.exceptions;
 
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -9,16 +10,14 @@ import lombok.extern.slf4j.Slf4j;
  *
  */
 
+@Getter
 @Slf4j
 public class CustomAppExceptions extends RuntimeException{
-    private String message;
+    private final String message;
 
     public CustomAppExceptions(String message) {
         this.message = message;
         log.error("An error occurred {}", message);
     }
 
-    public String getMessage() {
-        return message;
-    }
 }

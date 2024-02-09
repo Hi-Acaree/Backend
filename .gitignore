@@ -98,5 +98,16 @@ Desktop.ini
 
 ### Others ###
 # Add here other files you want to ignore (logs, configurations, etc.)
+
+#Spring boot application development properties file
 application-dev.properties
+
+#Docker compose file
+docker-compose.yaml
+
+#Environment variables file
+.env
+
+#Log files
+logs/
 
