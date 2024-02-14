@@ -111,3 +111,6 @@ docker-compose.yaml
 #Log files
 logs/
 
+#static images and files
+src/main/resources/static/images/
+
