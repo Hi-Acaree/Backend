@@ -20,11 +20,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Period;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.acaree.web.ApiMappings.*;
 
 @Slf4j
 @RestController
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping(APPOINTMENT_BASE_URL)
 public class AppointmentController {
     private final AppointmentService appointmentService;
@@ -133,7 +135,11 @@ public class AppointmentController {
             @RequestParam("doctorId") Long doctorId,
             @RequestParam("day") Doctor.DaysOfTheWeek day) {
         log.info("Inside getAvailableTimeSlotsForDoctorDay() method of AppointmentController class");
-        return ResponseEntity.ok().body(timeSlotService.findAvailableTimeSlotsForDoctorAndDay(doctorId, day));
+       try {
+           return ResponseEntity.ok().body(timeSlotService.findAvailableTimeSlotsForDoctorAndDay(doctorId, day));
+       } catch (NoSuchElementException e) {
+           return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+       }
     }
 
     @GetMapping(GET_APPOINTMENT_BY_ID_URL)

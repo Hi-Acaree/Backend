@@ -78,7 +78,7 @@ public class PatientService {
         Patient patient = new Patient();
 
         patient.setPersonDetails(new Person("Anonymous", "", email, null));
-        patient.setExpiry(LocalDateTime.now().plusDays(1)); // Set expiry to 24 hours from now
+        patient.setExpiry(LocalDateTime.now().plusDays(30)); // Temporary record expires in 30 days
 
         // Save the temporary patient
         return patientRepository.save(patient);

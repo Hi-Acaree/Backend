@@ -4,12 +4,20 @@ import org.acaree.core.exceptions.PersonException;
 import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Objects;
 
 /**
  * Service class for Person entity
@@ -24,12 +32,17 @@ import java.io.IOException;
 public class PersonService {
     private final PersonRepository personRepository;
     private final FileStorageService fileStorageService;
+    private final ResourceLoader resourceLoader;
 
     @Autowired
-    public PersonService(PersonRepository personRepository, FileStorageService fileStorageService) {
+    public PersonService(PersonRepository personRepository, FileStorageService fileStorageService,
+    ResourceLoader resourceLoader) {
         this.personRepository = personRepository;
         this.fileStorageService = fileStorageService;
+        this.resourceLoader = resourceLoader;
     }
+
+
 
     /**
      * Save the image to the file system and update the person's image path in the database
@@ -41,13 +54,18 @@ public class PersonService {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
 
+        // Construct a unique filename
         String filename = id + "_" + imageFile.getOriginalFilename();
+
+        // Save the image file to the file system or specific directory
         fileStorageService.writeFileBytes(filename, imageFile.getBytes());
 
-        // Update person record with new image path
-        person.setPictureUrl(filename);
+        // Construct and store a retrievable image path or URL
+        String imagePath = "/images/" + filename; // Adjust path as necessary
+        person.setPictureUrl(imagePath);
         personRepository.save(person);
     }
+
 
     /*
     * This method is used to get the image from the file system
@@ -56,31 +74,41 @@ public class PersonService {
     * @throws IOException If the image cannot be read from the file system
     * @throws PersonException If the person with the given ID is not found
      */
-    public byte[] getImage(Long id) throws PersonException, FileNotFoundException{
-        Person person = personRepository.findById(id)
+    public byte[] getImage(Long id) throws PersonException, FileNotFoundException, IOException {
+        var person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
 
-        if (!fileStorageService.exists(person.getPictureUrl())) {
-            throw new FileNotFoundException("Image not found");
+        String imagePath = "classpath:/static" + person.getPictureUrl(); // Adjusted path
+
+        Resource resource = resourceLoader.getResource(imagePath);
+        if (!resource.exists()) {
+            throw new FileNotFoundException("Image not found at " + imagePath);
         }
 
-         try {
-            return fileStorageService.readFileBytes(person.getPictureUrl());
-         } catch (IOException e) {
-             log.error("Error reading image from file system", e);
-               throw new RuntimeException("Error reading image from file system", e);
-         }
+//        log.info("Resolved image path: {}", resource.getURI().toString());
+
+        try (InputStream inputStream = resource.getInputStream()) {
+            return IOUtils.toByteArray(inputStream);
+        }
     }
 
 
-    public String getImageContentType(Long id) throws FileNotFoundException {
+    public String getImageContentType(Long id) throws FileNotFoundException, IOException, URISyntaxException {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
 
-        if (!fileStorageService.exists(person.getPictureUrl())) {
+        String imagePath = "classpath:static" + person.getPictureUrl();
+        Resource resource = resourceLoader.getResource(imagePath);
+        if (!resource.exists()) {
             throw new FileNotFoundException("Image not found");
         }
 
-        return fileStorageService.getContentType(person.getPictureUrl()); // Get the content type from the file system
+        // Use Files.probeContentType for a more reliable content type determination
+        String contentType = Files.probeContentType(Paths.get(resource.getURI()));
+        if (contentType == null) {
+            // Fallback to manual determination or throw an error
+            throw new IllegalArgumentException("Unable to determine content type");
+        }
+        return contentType;
     }
 }

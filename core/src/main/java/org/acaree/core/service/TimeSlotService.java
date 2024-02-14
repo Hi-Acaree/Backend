@@ -17,10 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Service class for TimeSlot entity
@@ -108,7 +105,8 @@ public class TimeSlotService {
      * @throws TimeSlotException if the day is null or the doctorId is invalid
      */
 
-    public List<TimeSlot> findAvailableTimeSlotsForDoctorAndDay(long doctorId, Doctor.DaysOfTheWeek day) throws TimeSlotException {
+    public List<TimeSlot> findAvailableTimeSlotsForDoctorAndDay(long doctorId, Doctor.DaysOfTheWeek day) throws TimeSlotException,
+            NoSuchElementException {
         // Check if doctorId is valid
         if (doctorId < 0) {
             log.error("Invalid Doctor ID: {}", doctorId);
@@ -127,6 +125,7 @@ public class TimeSlotService {
                 availableTimeSlots.add(timeSlot);
             }
         }
+        log.info("Available time slots for doctor {} on {} are: {}", doctorId, day, availableTimeSlots);
 
         return availableTimeSlots;
     }

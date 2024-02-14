@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.acaree.core.model.TimeSlot;
 
 /**
  * This class is a model class for AppointmentBookingDTO.
@@ -24,12 +23,16 @@ public class AppointmentBookingDTO {
     private String patientName;
     private long timeSlotId;
     private String reason;
+    private String type;
 
-    public AppointmentBookingDTO(long doctorId, String patientEmail, String patientName, long timeSlotId, String reason) {
+    public AppointmentBookingDTO(long doctorId, String patientEmail,
+                                 String patientName, long timeSlotId, String reason,
+                                 String type) {
         this.doctorId = doctorId;
         this.email = patientEmail;
         this.patientName = patientName;
         this.timeSlotId = timeSlotId;
         this.reason = reason;
+        this.type = type;
     }
 }

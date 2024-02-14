@@ -130,7 +130,7 @@ class AppointmentServiceTest {
     @Test
     void testBookAppointmentByPatient() throws JsonProcessingException {
         AppointmentBookingDTO appointmentBookingDTO = new AppointmentBookingDTO(1L, "cc@tt.com",
-                "Jane Doe", 1L, "Checkup");
+                "Jane Doe", 1L, "Checkup", "virtual");
 
         when(patientService.ensureTemporaryRecordOfPatient(appointmentBookingDTO.getEmail())).thenReturn(patient);
         when(doctorService.getDoctorById(appointmentBookingDTO.getDoctorId())).thenReturn(Optional.of(doctor));
@@ -416,7 +416,7 @@ void testUpdateAppointment_Success() {
 
     @Test
     void testScheduleReoccurringAppointments_InvalidInput() throws AppointmentBookingException{
-        AppointmentBookingDTO appointmentBookingDTO = new AppointmentBookingDTO(2L, "cc@test.com", "Annonymous", 1L, "Checkup");
+        AppointmentBookingDTO appointmentBookingDTO = new AppointmentBookingDTO(2L, "cc@test.com", "Annonymous", 1L, "Checkup", "virtual");
         int numberOfAppointments = 0;
         Period recurrencePeriod = Period.ofWeeks(1);
 

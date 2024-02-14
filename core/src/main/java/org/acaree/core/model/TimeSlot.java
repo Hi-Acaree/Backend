@@ -1,5 +1,6 @@
 package org.acaree.core.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,6 +49,7 @@ public class TimeSlot {
 
     private boolean isBooked;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "availability_id")
     private DoctorAvailability availability;

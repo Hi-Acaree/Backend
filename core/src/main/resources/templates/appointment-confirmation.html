@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Appointment Confirmation</title>
+</head>
+<body>
+<p>Hi your <span th:text="${appointmentType}">Appointment</span>,</p>
+<p>with <span th:text="${doctorName}">Doctor</span>.</p>
+<p><strong>Date:</strong> <span th:text="${date}"></span><br>
+    <strong>Start Time: </strong> <span th:text="${startTime}"></span></p>
+    <strong>End Time: </strong> <span th:text="${endTime}"></span></p>
+
+<p>has been confirmed.</p>
+<p>We look forward to seeing you soon,<br>Acaree</p>
+</body>
+</html>

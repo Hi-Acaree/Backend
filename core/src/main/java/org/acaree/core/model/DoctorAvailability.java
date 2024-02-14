@@ -1,6 +1,7 @@
 package org.acaree.core.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -34,6 +35,7 @@ public class DoctorAvailability {
     @Enumerated(EnumType.STRING)
     private Doctor.DaysOfTheWeek dayOfWeek;
 
+    @JsonManagedReference
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "availability_id")
     private Set<TimeSlot> timeSlots = new HashSet<>();

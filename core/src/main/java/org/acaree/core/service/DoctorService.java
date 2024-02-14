@@ -3,12 +3,10 @@ package org.acaree.core.service;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.DoctorException;
 import org.acaree.core.exceptions.TimeSlotException;
-import org.acaree.core.model.Appointment;
-import org.acaree.core.model.Doctor;
-import org.acaree.core.model.DoctorAvailability;
-import org.acaree.core.model.TimeSlot;
+import org.acaree.core.model.*;
 import org.acaree.core.repository.DoctorAvailabilityRepository;
 import org.acaree.core.repository.DoctorRepository;
+import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -32,6 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class DoctorService {
+    private final PersonRepository personRepository;
     private final DoctorRepository doctorRepository;
     private final DoctorAvailabilityRepository doctorAvailabilityRepository;
 
@@ -41,12 +40,15 @@ public class DoctorService {
      * Constructor for DoctorService.
      * @param doctorRepository the doctor repository to be injected.
      * @param doctorAvailabilityRepository the doctor availability repository to be injected.
+     * @param personRepository the person repository to be injected.
      */
     @Autowired
     public DoctorService(DoctorRepository doctorRepository,
-   DoctorAvailabilityRepository doctorAvailabilityRepository) {
+   DoctorAvailabilityRepository doctorAvailabilityRepository,
+                         PersonRepository personRepository) {
         this.doctorRepository = doctorRepository;
         this.doctorAvailabilityRepository = doctorAvailabilityRepository;
+        this.personRepository = personRepository;
     }
 
 
@@ -59,14 +61,18 @@ public class DoctorService {
      */
 
     @Transactional
-    public Doctor saveDoctor(Doctor doctor) throws DoctorException{
-           if (Objects.isNull(doctor)) {
-                throw new DoctorException("Doctor object cannot be null", ErrorType.DOCTOR_INVALID_INPUT);
-            }
-           Doctor savedDoctor = doctorRepository.save(doctor);
-              log.info("Saved doctor with id: {}", savedDoctor.getId());
-                return savedDoctor;
+    public Doctor saveDoctor(Doctor doctor) throws DoctorException {
+        if (Objects.isNull(doctor) || Objects.isNull(doctor.getPersonDetails())) {
+            throw new DoctorException("Doctor object or Person details cannot be null", ErrorType.DOCTOR_INVALID_INPUT);
+        }
+        // Directly save the Person details from the Doctor object
+        Person savedPerson = personRepository.save(doctor.getPersonDetails()); // This operation ensures the Person gets an ID
+        doctor.setPersonDetails(savedPerson); // Ensure the Doctor references the saved Person instance
+        Doctor savedDoctor = doctorRepository.save(doctor); // Now save the Doctor, which references a persisted Person
+        log.info("Saved doctor with id: {}", savedDoctor.getId());
+        return savedDoctor;
     }
+
 
     /**
      * This method is used to get a doctor by id.
@@ -119,18 +125,25 @@ public class DoctorService {
      */
     @Transactional
     public Doctor updateDoctor(Doctor doctor) throws DoctorException {
-        if (Objects.isNull(doctor)) {
-            throw new DoctorException("Doctor object cannot be null", ErrorType.DOCTOR_INVALID_INPUT);
+        if (Objects.isNull(doctor) || Objects.isNull(doctor.getPersonDetails()) || Objects.isNull(doctor.getId())) {
+            throw new DoctorException("Doctor object, Person details, or Doctor ID cannot be null", ErrorType.DOCTOR_INVALID_INPUT);
         }
-        // Check if doctor exists
-        getDoctor(doctor.getId()).orElseThrow(()
-                -> new DoctorException("Doctor with id: " + doctor.getId() + " not found", ErrorType.DOCTOR_NOT_FOUND));
-        long id = doctor.getId();
-        log.info("Doctor with id: {} updated", id);
 
-        // Update doctor
-        return doctorRepository.save(doctor);
+        // Check if the doctor exists
+        Doctor existingDoctor = doctorRepository.findById(doctor.getId())
+                .orElseThrow(() -> new DoctorException("Doctor with id: " + doctor.getId() + " not found", ErrorType.DOCTOR_NOT_FOUND));
+
+        // Optionally check and update person details if necessary
+        Person updatedPerson = personRepository.save(doctor.getPersonDetails()); // This line assumes person details might have changed and need to be updated.
+        doctor.setPersonDetails(updatedPerson); // Re-associate the updated person details with the doctor
+
+        // Perform the update
+        Doctor updatedDoctor = doctorRepository.save(doctor);
+        log.info("Doctor with id: {} updated", doctor.getId());
+
+        return updatedDoctor;
     }
+
 
     //== get all doctors ==
 
@@ -432,6 +445,7 @@ public class DoctorService {
         }
 
         log.info("Doctor with id: {} availability retrieved", id);
+        log.info("Doctor availability: {}", availableDates);
         return availableDates;
     }
 

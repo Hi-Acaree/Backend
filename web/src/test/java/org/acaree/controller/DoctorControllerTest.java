@@ -114,6 +114,12 @@ public class DoctorControllerTest {
     @Test
     void testAddDoctor() throws Exception {
         Doctor doctor = new Doctor();
+        doctor.setId(1L);
+        doctor.setSpecialization("Cardiologist");
+        doctor.setHospitalName("Apollo");
+        doctor.setDepartmentName("Cardiology");
+        doctor.setPersonDetails(new Person("John", "Doe", "cc@test.com", "1234567890"));
+
 
         when(doctorService.saveDoctor(any(Doctor.class))).thenReturn(doctor);
         String doctorJson = objectMapper.writeValueAsString(doctor);
@@ -147,7 +153,7 @@ public class DoctorControllerTest {
 
     @Test
     void testGetDoctorById() throws Exception {
-        Long doctorId = 1L;
+        long doctorId = 1L;
         when(doctorService.getDoctorById(doctorId)).thenReturn(java.util.Optional.of(doctor));
         mockMvc.perform(get("/api/v1/doctor/{id}", doctorId))
                 .andExpect(status().isOk())

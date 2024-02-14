@@ -1,5 +1,6 @@
 package org.acaree.core.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,7 +38,6 @@ public class Patient {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person personDetails;
-
 
     @OneToMany(mappedBy = "patient")
     private List<Appointment> appointments;

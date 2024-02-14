@@ -4,6 +4,7 @@ import org.acaree.core.exceptions.DoctorException;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.DoctorAvailabilityRepository;
 import org.acaree.core.repository.DoctorRepository;
+import org.acaree.core.repository.PersonRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,8 @@ import static org.mockito.Mockito.*;
  class DoctorServiceTest {
     @Mock
     private DoctorRepository doctorRepository;
+    @Mock
+    private PersonRepository personRepository;
 
     @Mock
     private DoctorAvailabilityRepository doctorAvailabilityRepository;

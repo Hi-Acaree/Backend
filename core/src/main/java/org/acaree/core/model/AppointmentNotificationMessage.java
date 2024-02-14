@@ -2,9 +2,6 @@ package org.acaree.core.model;
 
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 /**
  * This class is a model class for AppointmentNotificationMessage.
  * It contains information about an appointment notification message.

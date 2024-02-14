@@ -76,7 +76,7 @@ public class AppointmentService {
         }
 
         Patient patient = patientService.ensureTemporaryRecordOfPatient(bookingDTO.getEmail());
-        Long timeSlotId = bookingDTO.getTimeSlotId();
+        long timeSlotId = bookingDTO.getTimeSlotId();
         TimeSlot timeSlot = timeSlotService.findAvailableTimeSlot(timeSlotId)
                 .orElseThrow(() -> new TimeSlotException("Time slot with ID: " + timeSlotId + " not found or already booked",
                         ErrorType.TIMESLOT_NOT_FOUND));
@@ -89,6 +89,7 @@ public class AppointmentService {
         appointment.setDoctor(doctor);
         appointment.setReason(bookingDTO.getReason());
         appointment.setTimeSlot(timeSlot);
+        appointment.setType(bookingDTO.getType());
         appointment.setBooked(true);
 
         appointment = appointmentRepository.save(appointment);
@@ -415,7 +416,7 @@ public class AppointmentService {
         String doctorName = appointment.getDoctor() != null ? appointment.getDoctor().getPersonDetails().getFirstName() + " " + appointment.getDoctor().getPersonDetails().getLastName() : "Doctor";
         String email = appointment.getPatient().getPersonDetails().getEmail();
         String appointmentType = appointment.getType() != null ? appointment.getType() : "Unknown";
-        // Assuming AppointmentNotificationMessage has a constructor or setters to set these properties.
+
         return new AppointmentNotificationMessage(doctorName, email, appointmentType, appointment.getTimeSlot(), text);
     }
 

@@ -1,13 +1,19 @@
 package org.acaree.core.notification;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.model.AppointmentNotificationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
+import java.nio.charset.StandardCharsets;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,10 +34,13 @@ public class MessageListener {
     private  final JavaMailSender mailSender;
 
     private final ObjectMapper objectMapper;
+    private final TemplateEngine templateEngine;
     @Autowired
-    public MessageListener(JavaMailSender mailSender, ObjectMapper objectMapper) {
+    public MessageListener(JavaMailSender mailSender, ObjectMapper objectMapper,
+                           TemplateEngine templateEngine) {
         this.mailSender = mailSender;
         this.objectMapper = objectMapper;
+        this.templateEngine = templateEngine;
     }
 
     /**
@@ -50,38 +59,56 @@ public class MessageListener {
             AppointmentNotificationMessage message = objectMapper.readValue(messageJson, AppointmentNotificationMessage.class);
             log.info("Sending email to: {}", message.getEmail());
             // send email
-            sendEmail(message);
+            sendAppointmentEmail(message);
         } catch (Exception e) {
             log.error("Error occurred while processing the message: {}", e.getMessage());
         }
 
     }
 
-    /**
-     * This method is used to send the email.
-     * @param message The message to be sent.
-     */
+//    /**
+//     * This method is used to send the email.
+//     * @param message The message to be sent.
+//     */
 
-    private void sendEmail(AppointmentNotificationMessage message) {
-        if (!isValidEmail(message.getEmail())) {
-            log.error("Invalid email: {}", message.getEmail());
-            return;
-        }
+    public void sendAppointmentEmail(AppointmentNotificationMessage messageObject) {
 
-        SimpleMailMessage mailMessage = new SimpleMailMessage();
-        String emailFrom = System.getenv("EMAIL_FROM"); // get from email (environment variable)
-        if (emailFrom == null) {
-            log.error("Email from is not set");
-            return;
+        var dateFormatter = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy");  // Example: Monday, January 1, 2024
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("h:mm a"); // Example: 9:00 AM
+
+        String dateFormatted = messageObject.getTimeSlot().getDate().format(dateFormatter);
+        String startTimeFormatted = messageObject.getTimeSlot().getStartTime().format(timeFormatter);
+        String endTimeFormatted = messageObject.getTimeSlot().getEndTime().format(timeFormatter);
+
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message,
+                    MimeMessageHelper.MULTIPART_MODE_MIXED_RELATED,
+                    StandardCharsets.UTF_8.name()); // true for multipart message
+
+            Context context = new Context(); // Thymeleaf context
+            context.setVariable("doctorName", messageObject.getDoctorName());
+            context.setVariable("appointmentType", messageObject.getAppointmentType());
+            context.setVariable("date", dateFormatted);
+            context.setVariable("startTime", startTimeFormatted);
+            context.setVariable("endTime", endTimeFormatted);
+
+            String html = templateEngine.process("appointment-confirmation.html", context); // process the html template
+
+            if (!isValidEmail(messageObject.getEmail())) {
+                log.error("Invalid email: {}", messageObject.getEmail());
+                return;
+            }
+
+
+            helper.setTo(messageObject.getEmail());
+            helper.setText(html, true);
+            helper.setSubject("Appointment Confirmation");
+            helper.setFrom(System.getenv("EMAIL_FROM"));
+            mailSender.send(message);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        mailMessage.setFrom(emailFrom); // set from email (environment variable)
-        mailMessage.setSubject("Appointment Confirmation");
-        mailMessage.setTo(message.getEmail());
-        log.info("Sending email to: {}", message.getEmail());
-        mailMessage.setSubject("Appointment Confirmation");
-        mailMessage.setText(buildEmailText(message));
-        mailSender.send(mailMessage); // send email
-        log.info("Email sent to: {}", Objects.requireNonNull(mailMessage.getTo())[0]);
     }
 
     /**
@@ -97,29 +124,6 @@ public class MessageListener {
         return matcher.matches();
     }
 
-    /**
-     * This method is used to build the email text.
-     * @param message The message to be used to build the email text.
-     * @return The email text.
-     */
-
-    private String buildEmailText(AppointmentNotificationMessage message) {
-       // construct a more detailed message based on the AppointmentNotificationMessage object
-       StringBuilder sb = new StringBuilder();
-       sb.append("Your, ");
-            sb.append(message.getAppointmentType());
-            sb.append(" appointment with ");
-            sb.append(message.getDoctorName());
-            sb.append(" is confirmed, for date: ");
-            sb.append(message.getTimeSlot().getDate());
-            sb.append(" at ");
-            sb.append(message.getTimeSlot().getStartTime());
-            sb.append(" to ");
-            sb.append(message.getTimeSlot().getEndTime());
-            sb.append(".");
-            return sb.toString();
-
-    }
 
 
 }

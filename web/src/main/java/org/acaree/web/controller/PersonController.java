@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+
 import static org.acaree.web.ApiMappings.*;
 
 /**
@@ -83,7 +85,7 @@ public class PersonController {
             return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (PersonException e) {
+        } catch (PersonException | URISyntaxException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }

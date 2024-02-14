@@ -1,5 +1,6 @@
 package org.acaree.core.exceptions;
 
+import lombok.Getter;
 import org.acaree.core.util.ErrorType;
 
 /**
@@ -16,6 +17,7 @@ import org.acaree.core.util.ErrorType;
  *
  */
 
+@Getter
 public class AppointmentBookingException extends CustomAppExceptions {
 
 
@@ -31,11 +33,6 @@ public class AppointmentBookingException extends CustomAppExceptions {
         super(message);
         this.errorType = errorType;
     }
-
-    public ErrorType getErrorType() {
-        return errorType;
-    }
-
 
 
 }

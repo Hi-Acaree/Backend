@@ -55,7 +55,7 @@ public class AppConfig {
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.office365.com");
+        mailSender.setHost("mail.optonline.net");
         mailSender.setPort(587);
         mailSender.setUsername(System.getenv("EMAIL_FROM"));
         mailSender.setPassword(System.getenv("EMAIL_PASSWORD"));

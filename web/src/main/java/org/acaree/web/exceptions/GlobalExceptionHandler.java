@@ -68,6 +68,10 @@ public class GlobalExceptionHandler {
                 status = HttpStatus.NOT_FOUND;
                 log.error("Appointment not found", ex);
                 break;
+            case DOCTOR_NOT_AVAILABLE_FOR_APPOINTMENT_TIME_SELECTED:
+                status = HttpStatus.BAD_REQUEST;
+                break;
+
             default:
                 status = HttpStatus.BAD_REQUEST;
                 log.error("Bad request", ex);
