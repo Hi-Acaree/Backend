@@ -8,12 +8,16 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.dto.AppointmentBookingDTO;
+import org.acaree.core.dto.AppointmentDTO;
 import org.acaree.core.exceptions.*;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.AppointmentRepository;
 import org.acaree.core.repository.PatientRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service class for Appointment entity
@@ -295,17 +300,24 @@ public class AppointmentService {
     /**
      * This method is used to get all appointments by doctor ID
      * @param doctorId The ID of the doctor
-     * @return A list of all appointments by doctor ID
+     * @param pageable for pagination
+     * @return A paginated list
      * @throws AppointmentBookingException if the doctor ID is invalid
      */
 
     @Transactional(readOnly = true)
-    public List<Appointment> getAllAppointmentsByDoctorId(long doctorId) throws AppointmentBookingException {
+    public Page<AppointmentDTO> getAllAppointmentsByDoctorId(long doctorId, Pageable pageable) throws AppointmentBookingException {
         if (doctorId < 0) {
             throw new AppointmentBookingException("Invalid doctor id", ErrorType.APPOINTMENT_INVALID_INPUT);
         }
-        return appointmentRepository.findDoctorAppointment(doctorId);
+        Page<Appointment> appointmentPage = appointmentRepository.findDoctorAppointment(doctorId, pageable);
+        List<AppointmentDTO> DTOs = appointmentPage.getContent()
+                .stream()
+                .map(AppointmentDTO::from)
+                .collect(Collectors.toList());
+        return new PageImpl<>(DTOs, pageable, appointmentPage.getTotalElements());
     }
+
 
     /**
      * This method is used to get all appointments by patient ID

@@ -1,6 +1,8 @@
 version: '3'
 services:
   app:
+    networks:
+      - app-network
     image: ${DOCKER_REGISTRY-}apt-app:latest
     ports:
      - "${APP_PORT:-8080}:8080"
@@ -23,6 +25,8 @@ services:
       EMAIL_AUTH: ${EMAIL_AUTH}
       EMAIL_STARTTLS: ${EMAIL_STARTTLS}
   mysqldb:
+    networks:
+      - app-network
     image: ${DOCKER_REGISTRY-}mysql:5.7
     restart: unless-stopped
     environment:
@@ -35,9 +39,14 @@ services:
     volumes:
     - ${MYSQL_VOLUME}:/var/lib/mysql
   activemq:
+    networks:
+      - app-network
     image: ${DOCKER_REGISTRY-}rmohr/activemq
     environment:
       ACTIVEMQ_ADMIN_LOGIN: ${ACTIVEMQ_ADMIN_LOGIN}
       ACTIVEMQ_ADMIN_PASSWORD: ${ACTIVEMQ_ADMIN_PASSWORD}
 volumes:
   mysql_data:
+networks:
+  app-network:
+    driver: bridge

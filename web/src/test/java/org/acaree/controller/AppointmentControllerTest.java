@@ -1,6 +1,7 @@
 package org.acaree.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.acaree.core.dto.AppointmentBookingDTO;
+import org.acaree.core.dto.AppointmentDTO;
 import org.acaree.core.model.*;
 import org.acaree.core.service.AppointmentService;
 import org.acaree.core.service.TimeSlotService;
@@ -11,11 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -181,15 +188,26 @@ public class AppointmentControllerTest {
 
     @Test
     public void testGetAllAppointmentsByDoctorId() throws Exception {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 20);
         long doctorId = 1L;
-        List<Appointment> appointments = List.of(appointment2);
-       when(appointmentService.getAllAppointmentsByDoctorId(doctorId)).thenReturn(appointments);
-        mockMvc.perform(get("/api/v1/appointment/doctor/{doctorId}", doctorId)
-                        .contentType(APPLICATION_JSON))
-                .andExpect(status().isOk());
-        assertEquals(appointmentService.getAllAppointmentsByDoctorId(doctorId), appointments);
+        List<AppointmentDTO> appointmentDTOList = new ArrayList<>();
+        Page<AppointmentDTO> appointments = new PageImpl<>(appointmentDTOList, pageable, 0);
 
+        // Mock the service call with specific Pageable
+        when(appointmentService.getAllAppointmentsByDoctorId(eq(doctorId), eq(pageable))).thenReturn(appointments);
+
+        // Act & Assert
+        mockMvc.perform(get("/api/v1/appointment/doctor/{doctorId}", doctorId)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        // Include additional assertions as needed
+
+        // Verify the service was called with specific Pageable
+        verify(appointmentService).getAllAppointmentsByDoctorId(eq(doctorId), eq(pageable));
     }
+
+
 
     @Test
     public void testGetAllAppointmentsByPatientId() throws Exception {

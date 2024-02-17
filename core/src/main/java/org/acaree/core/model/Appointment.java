@@ -82,6 +82,11 @@ public class Appointment {
     @Override
     public String toString() {
         return "Appointment{" +
+                "AppointmentId=" + id +
+                ", patient=" + (patient != null ? patient.getPersonDetails().getFirstName() + patient.getPersonDetails().getLastName() : "null") +
+                ", doctor=" + (doctor != null ? doctor.getPersonDetails().getFirstName() + doctor.getPersonDetails().getLastName() : "null") +
+                "type='" + (type != null ? type : "null") + '\'' +
+                ", booked=" + booked +
                 ", startTime=" + (timeSlot != null ? timeSlot.getStartTime().toString() : "null") +
                 ", endTime=" + (timeSlot != null ? timeSlot.getEndTime().toString() : "null") +
                 ", reason='" + (reason != null ? reason : "null") + '\'' +

@@ -36,4 +36,6 @@ public class DoctorAvailabilityService {
         // fetch the doctor availability for the given day and doctor id
         return doctorAvailabilityRepository.findByDayAndDoctorId(day, doctorId);
     }
+
+
 }

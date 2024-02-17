@@ -3,6 +3,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.dto.AppointmentBookingDTO;
+import org.acaree.core.dto.AppointmentDTO;
 import org.acaree.core.exceptions.AppointmentBookingException;
 import org.acaree.core.exceptions.BookingCancelException;
 import org.acaree.core.exceptions.TimeSlotException;
@@ -20,6 +21,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.sql.Time;
 import java.time.LocalDateTime;
@@ -294,18 +299,34 @@ void testUpdateAppointment_Success() {
     }
 
     @Test
-    void testGetAllAppointmentByDoctorId_Success() {
+    void testGetAllAppointmentsByDoctorId_Success() {
         // Arrange
-        when(appointmentRepository.findDoctorAppointment(1L)).thenReturn(List.of(appointment));
+        Doctor doctor = new Doctor();
+        doctor.setId(1L);
+        Patient patient = new Patient();
+        patient.setId(2L);
+        TimeSlot timeSlot = new TimeSlot();
+        timeSlot.setId(3L);
+        Pageable pageable = PageRequest.of(0, 10); // Example pageable request
+
+        // Mocking the appointment details, assuming 'appointment' is a pre-made instance of Appointment
+        Appointment appointment = mock(Appointment.class); // Ensure this is properly instantiated or mocked based on your setup
+        when(appointment.getDoctor()).thenReturn(doctor); // Mocking Doctor inside Appointment
+        when(appointment.getPatient()).thenReturn(patient); // Mocking Patient inside Appointment
+        when(appointment.getTimeSlot()).thenReturn(timeSlot);
+        when(appointmentRepository.findDoctorAppointment(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(appointment)));
 
         // Act
-        List<Appointment> returnedAppointment = appointmentService.getAllAppointmentsByDoctorId(1L);
+        Page<AppointmentDTO> returnedAppointmentPage = appointmentService.getAllAppointmentsByDoctorId(1L, pageable);
 
         // Assert
-        assertNotNull(returnedAppointment);
-        assertEquals(1, returnedAppointment.size());
-        assertEquals(1L, returnedAppointment.get(0).getDoctor().getId());
-        assertEquals(2L, returnedAppointment.get(0).getPatient().getId());
+        assertNotNull(returnedAppointmentPage);
+        assertEquals(1, returnedAppointmentPage.getContent().size()); // Check the size of the content inside the page
+
+        AppointmentDTO returnedAppointmentDTO = returnedAppointmentPage.getContent().get(0);
+        assertEquals(1L, returnedAppointmentDTO.getDoctorId());
+        assertEquals(2L, returnedAppointmentDTO.getPatientId());
     }
 
     @Test

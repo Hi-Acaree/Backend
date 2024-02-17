@@ -13,7 +13,9 @@ import org.acaree.core.model.Doctor;
 import org.acaree.core.model.TimeSlot;
 import org.acaree.core.service.AppointmentService;
 import org.acaree.core.service.TimeSlotService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.acaree.core.dto.AppointmentDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -167,10 +169,12 @@ public class AppointmentController {
     })
 
     @GetMapping(GET_ALL_APPOINTMENTS_BY_DOCTOR_ID_URL)
-    public ResponseEntity<Iterable<Appointment>> getAllAppointmentsByDoctorId(@PathVariable("doctorId") Long id) {
+    public ResponseEntity<Page<AppointmentDTO>> getAllAppointmentsByDoctorId(@PathVariable("doctorId") Long id, Pageable pageable) {
         log.info("Inside getAllAppointmentsByDoctorId() method of AppointmentController class");
-        return ResponseEntity.ok().body(appointmentService.getAllAppointmentsByDoctorId(id));
+        return ResponseEntity.ok().body(appointmentService.getAllAppointmentsByDoctorId(id, pageable));
     }
+
+
 
     @Operation(summary = "Get all appointments by doctor id and time slot id", description = "This API is used to get all appointments by doctor id and time slot id")
     @ApiResponses(value = {
@@ -192,7 +196,7 @@ public class AppointmentController {
     })
 
     @PostMapping(SCHEDULE_RECURRING_APPOINTMENT_URL)
-    public ResponseEntity<Iterable<Appointment>> scheduleRecurringAppointment(
+    public ResponseEntity<List<Appointment>> scheduleRecurringAppointment(
             @Valid @RequestBody AppointmentBookingDTO bookingDTO,
             @NotNull @RequestParam("numberOfAppointments") int numberOfAppointments,
             @NotNull @RequestParam("frequency") String frequency) {
@@ -200,6 +204,20 @@ public class AppointmentController {
         Period periodFrequency = Period.parse(frequency); // Convert string to Period
         return ResponseEntity.ok().body(appointmentService.scheduleReoccurringAppointments(bookingDTO, numberOfAppointments, periodFrequency));
     }
+
+    //== private methods ==
+    private AppointmentDTO convertToDTO(Appointment appointment) {
+        AppointmentDTO appointmentDTO = new AppointmentDTO();
+        appointmentDTO.setId(appointment.getId());
+        appointmentDTO.setReason(appointment.getReason());
+        appointmentDTO.setType(appointment.getType() != null ? appointment.getType() : "N/A");
+        appointmentDTO.setBooked(appointment.isBooked());
+        appointmentDTO.setDoctorId(appointment.getDoctor().getId());
+        appointmentDTO.setPatientId(appointment.getPatient().getId());
+        appointmentDTO.setTimeSlotId(appointment.getTimeSlot().getId());
+        return appointmentDTO;
+    }
+
 
 
 
