@@ -34,12 +34,15 @@ public class AppointmentController {
     private final AppointmentService appointmentService;
 
     private final TimeSlotService timeSlotService;
+    private final AppointmentNotificationController appointmentNotificationController;
 
 
     public AppointmentController(AppointmentService appointmentService,
-                                 TimeSlotService timeSlotService) {
+                                 TimeSlotService timeSlotService,
+                                 AppointmentNotificationController appointmentNotificationController) {
         this.appointmentService = appointmentService;
         this.timeSlotService = timeSlotService;
+        this.appointmentNotificationController = appointmentNotificationController;
     }
 
 
@@ -53,8 +56,10 @@ public class AppointmentController {
     public ResponseEntity<Appointment> bookAppointmentByPatient(@Valid
             @RequestBody AppointmentBookingDTO bookingDTO){
         log.info("Inside bookAppointmentByPatient() method of AppointmentController class");
-        return ResponseEntity.status(HttpStatus.CREATED)
+        ResponseEntity<Appointment> res = ResponseEntity.status(HttpStatus.CREATED)
                 .body(appointmentService.bookAppointmentByPatient(bookingDTO));
+        appointmentNotificationController.notifyNewAppointment(res.getBody());
+        return res;
     }
 
 
@@ -171,7 +176,10 @@ public class AppointmentController {
     @GetMapping(GET_ALL_APPOINTMENTS_BY_DOCTOR_ID_URL)
     public ResponseEntity<Page<AppointmentDTO>> getAllAppointmentsByDoctorId(@PathVariable("doctorId") Long id, Pageable pageable) {
         log.info("Inside getAllAppointmentsByDoctorId() method of AppointmentController class");
-        return ResponseEntity.ok().body(appointmentService.getAllAppointmentsByDoctorId(id, pageable));
+        ResponseEntity<Page<AppointmentDTO>>  res = ResponseEntity.ok().body(appointmentService.getAllAppointmentsByDoctorId(id, pageable));
+        log.info("res, {}", res);
+        return res;
+
     }
 
 
@@ -205,18 +213,6 @@ public class AppointmentController {
         return ResponseEntity.ok().body(appointmentService.scheduleReoccurringAppointments(bookingDTO, numberOfAppointments, periodFrequency));
     }
 
-    //== private methods ==
-    private AppointmentDTO convertToDTO(Appointment appointment) {
-        AppointmentDTO appointmentDTO = new AppointmentDTO();
-        appointmentDTO.setId(appointment.getId());
-        appointmentDTO.setReason(appointment.getReason());
-        appointmentDTO.setType(appointment.getType() != null ? appointment.getType() : "N/A");
-        appointmentDTO.setBooked(appointment.isBooked());
-        appointmentDTO.setDoctorId(appointment.getDoctor().getId());
-        appointmentDTO.setPatientId(appointment.getPatient().getId());
-        appointmentDTO.setTimeSlotId(appointment.getTimeSlot().getId());
-        return appointmentDTO;
-    }
 
 
 

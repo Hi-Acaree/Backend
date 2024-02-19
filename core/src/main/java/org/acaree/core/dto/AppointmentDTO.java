@@ -4,12 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.acaree.core.exceptions.DoctorException;
-import org.acaree.core.exceptions.PatientException;
-import org.acaree.core.exceptions.TimeSlotException;
 import org.acaree.core.model.Appointment;
-import org.acaree.core.util.ErrorType;
-
 import java.util.Objects;
 
 @Getter @Setter
@@ -17,9 +12,9 @@ import java.util.Objects;
 @NoArgsConstructor
 public class AppointmentDTO {
     private long id;
-    private long patientId;
-    private long doctorId;
-    private long timeSlotId;
+    private PatientDTO patient;
+    private DoctorDTO doctor;
+    private TimeSlotDTO timeSlot;
     private String reason;
     private String type;
     private boolean booked;
@@ -27,24 +22,16 @@ public class AppointmentDTO {
     public static AppointmentDTO from(Appointment appointment) {
         AppointmentDTO dto = new AppointmentDTO();
         Objects.requireNonNull(appointment, "Appointment cannot be null");
-        if (appointment.getPatient() == null) {
-            throw new PatientException("Patient cannot be null", ErrorType.PATIENT_NOT_FOUND);
-        }
-        if (appointment.getDoctor() == null) {
-            throw new DoctorException("Doctor cannot be null", ErrorType.DOCTOR_NOT_FOUND);
-        }
-        if (appointment.getTimeSlot() == null){
-            throw new TimeSlotException("Time slot is null", ErrorType.TIMESLOT_NOT_FOUND);
-        }
-
         dto.setId(appointment.getId());
-        dto.setPatientId(appointment.getPatient().getId());
-        dto.setDoctorId(appointment.getDoctor().getId());
-        dto.setTimeSlotId(appointment.getTimeSlot().getId());
+        dto.setPatient(PatientDTO.from(appointment.getPatient()));
+        dto.setDoctor(DoctorDTO.from(appointment.getDoctor()));
+        dto.setTimeSlot(TimeSlotDTO.from(appointment.getTimeSlot()));
         dto.setReason(appointment.getReason());
         dto.setType(appointment.getType());
         dto.setBooked(appointment.isBooked());
+
         return dto;
+
     }
 
 

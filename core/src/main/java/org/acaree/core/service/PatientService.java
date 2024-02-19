@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.PatientException;
 import org.acaree.core.model.*;
 import org.acaree.core.repository.PatientRepository;
+import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,15 +34,20 @@ import java.util.Optional;
 public class PatientService {
 
     private final PatientRepository patientRepository;
+    private final PersonRepository personRepository;
 
     /**
      * Constructor for PatientService.
      * @param patientRepository the patient repository to be injected.
+     * @param personRepository the person repository to be injected.
+     * {@code @Autowired } annotation is used to inject the PatientRepository and PersonRepository dependencies.
      */
 
     @Autowired
-    public PatientService(PatientRepository patientRepository) {
+    public PatientService(PatientRepository patientRepository,
+                          PersonRepository personRepository) {
         this.patientRepository = patientRepository;
+        this.personRepository = personRepository;
     }
 
     //== public methods ==
@@ -68,21 +74,17 @@ public class PatientService {
     }
 
     public Patient ensureTemporaryRecordOfPatient(String email) {
-        // Optional: Check if a patient with this email already exists to avoid duplicates
-        Optional<Patient> existingPatient = patientRepository.findByEmail(email);
-        if (existingPatient.isPresent()) {
-            return existingPatient.get();
-        }
+        return patientRepository.findByEmail(email).orElseGet(() -> {
+            Person person = new Person("Anonymous", "Patient", email, "1234567890");
+            person = personRepository.save(person); // Save person first
 
-        // Create a new temporary patient record
-        Patient patient = new Patient();
-
-        patient.setPersonDetails(new Person("Anonymous", "", email, null));
-        patient.setExpiry(LocalDateTime.now().plusDays(30)); // Temporary record expires in 30 days
-
-        // Save the temporary patient
-        return patientRepository.save(patient);
+            Patient patient = new Patient();
+            patient.setPersonDetails(person);
+            patient.setExpiry(LocalDateTime.now().plusDays(30)); // Set expiry for temporary record
+            return patientRepository.save(patient); // Save patient with associated person
+        });
     }
+
 
     /**
      * This method is used to get a patient by id.

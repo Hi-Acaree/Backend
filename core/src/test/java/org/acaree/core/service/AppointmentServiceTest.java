@@ -71,6 +71,7 @@ class AppointmentServiceTest {
     private Patient patient;
     private Doctor doctor;
     private TimeSlot timeSlot;
+    private Person person;
 
 
     @Mock
@@ -307,6 +308,25 @@ void testUpdateAppointment_Success() {
         patient.setId(2L);
         TimeSlot timeSlot = new TimeSlot();
         timeSlot.setId(3L);
+        timeSlot.setStartTime(LocalDateTime.now());
+        timeSlot.setEndTime(LocalDateTime.now().plusMinutes(30));
+        Person person = new Person();
+        person.setId(4L);
+        person.setFirstName("Jared");
+        person.setLastName("Smith");
+        person.setEmail("cc@test.com");
+        person.setPhone("1234567890");
+        doctor.setPersonDetails(person);
+        doctor.setSpecialization("Cardiologist");
+        doctor.setHospitalName("Elaine Hospital");
+        doctor.setDepartmentName("Cardiology");
+        Person person1 = new Person();
+        person1.setFirstName("Zoe");
+        person1.setLastName("Doe");
+        person1.setEmail("zoe@test.com");
+        person1.setPhone("1234567890");
+        patient.setPersonDetails(person1);
+
         Pageable pageable = PageRequest.of(0, 10); // Example pageable request
 
         // Mocking the appointment details, assuming 'appointment' is a pre-made instance of Appointment
@@ -325,8 +345,8 @@ void testUpdateAppointment_Success() {
         assertEquals(1, returnedAppointmentPage.getContent().size()); // Check the size of the content inside the page
 
         AppointmentDTO returnedAppointmentDTO = returnedAppointmentPage.getContent().get(0);
-        assertEquals(1L, returnedAppointmentDTO.getDoctorId());
-        assertEquals(2L, returnedAppointmentDTO.getPatientId());
+        assertEquals(1L, returnedAppointmentDTO.getDoctor().getId());
+        assertEquals(2L, returnedAppointmentDTO.getPatient().getId());
     }
 
     @Test

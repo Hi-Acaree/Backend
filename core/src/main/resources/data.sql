@@ -1950,20 +1950,7 @@ INSERT INTO time_slot (version, start_time, end_time, is_booked, availability_id
 INSERT INTO time_slot (version, start_time, end_time, is_booked, availability_id) VALUES (0, '2024-03-15 16:00:55', '2024-03-15 16:30:55', false, 110);
 INSERT INTO time_slot (version, start_time, end_time, is_booked, availability_id) VALUES (0, '2024-03-15 16:30:55', '2024-03-15 17:00:55', false, 110);
 
--- Insert records into the `person` table
-INSERT INTO person (id, first_name, last_name, email, phone, picture_url) VALUES
-                                                                              (1, 'Micky', 'Zoe', 'zoe@test.com', '09087654321', '/images/pt_avatar.webp'),
-                                                                              (2, 'Jane', 'Banks', 'jane@rose.com', '8756432165', '/images/avatar-2.webp');
 
--- Insert corresponding records into the `patient` table
-INSERT INTO patient (person_id) VALUES
-                                    (1),
-                                    (2);
-
--- Insert Appointments
-INSERT INTO appointment (doctor_id, patient_id, time_slot_id, reason, type, booked) VALUES
-                                                                                    (1, 1, 1, 'Medical surgery', 'N/A', TRUE),
-                                                                                    (2, 2, 2, 'Routine check-up', 'N/A', TRUE);
 
 
 

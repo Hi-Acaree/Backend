@@ -6,9 +6,11 @@ import org.acaree.core.model.*;
 import org.acaree.core.service.AppointmentService;
 import org.acaree.core.service.TimeSlotService;
 import org.acaree.web.controller.AppointmentController;
+import org.acaree.web.controller.AppointmentNotificationController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -27,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -35,6 +38,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
@@ -53,6 +57,8 @@ public class AppointmentControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+    @MockBean
+    private AppointmentNotificationController appointmentNotificationController;
 
     private Appointment appointment;
     private Doctor doctor;
@@ -76,6 +82,7 @@ public class AppointmentControllerTest {
                 "08090909090"));
         doctor.setSpecialization("Cardiologist");
         doctor.setDepartmentName("Cardiology");
+        doctor.setHospitalName("Doreen");
 
         patient = new Patient();
         patient.setId(1L);
@@ -99,19 +106,29 @@ public class AppointmentControllerTest {
 
     }
 
-    // Test methods will go here
-
     @Test
-    public void testBookAppointmentByPatient() throws Exception {
-        AppointmentBookingDTO bookingDTO = new AppointmentBookingDTO(1L, "cc@test.com", "", 1L, "check up", "virtual");
+    void bookAppointmentByPatientTest() throws Exception {
+        AppointmentBookingDTO bookingDTO = new AppointmentBookingDTO(); // Populate this with test data
+        Appointment expectedAppointment = new Appointment(); // Populate this with expected result
+        expectedAppointment.setPatient(patient);
+        expectedAppointment.setDoctor(doctor);
+        expectedAppointment.setTimeSlot(timeSlot);
+        expectedAppointment.setReason("Test reason");
 
-        when(appointmentService.bookAppointmentByPatient(bookingDTO)).thenReturn(appointment2);
+        // Mock the service layer to return the expected appointment
+        Mockito.when(appointmentService.bookAppointmentByPatient(Mockito.any(AppointmentBookingDTO.class))).thenReturn(expectedAppointment);
 
         mockMvc.perform(post("/api/v1/appointment/book/appointment")
-                        .contentType(APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bookingDTO)))
-                .andExpect(status().isCreated()); // Assuming the controller returns HttpStatus.CREATED (201)
-    }
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(bookingDTO)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.reason", is("Test reason")));
+        // Verify that the notification method was called
+        Mockito.verify(appointmentNotificationController, Mockito.times(1)).notifyNewAppointment(Mockito.any(Appointment.class));
+
+          }
+
+
 
     @Test
     public void testAssignAppointmentToDoctor() throws Exception {
