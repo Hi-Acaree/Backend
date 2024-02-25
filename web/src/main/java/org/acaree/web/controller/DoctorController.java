@@ -240,6 +240,17 @@ public class DoctorController {
         return ResponseEntity.ok().body(doctorService.getDoctorAvailability(doctorId));
     }
 
+    @Operation(summary = "Get doctor weekly schedule", description = "This API is used to get doctor weekly schedule")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Doctor weekly schedule fetched successfully"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping(GET_DOCTOR_UNAVAILABLE_DAYS_URL)
+      public ResponseEntity<List<Doctor.DaysOfTheWeek>> getDoctorUnavailableDays(@PathVariable("id") Long doctorId) {
+            log.info("Inside getDoctorUnavailableDays() method of DoctorController class");
+            return ResponseEntity.ok().body(doctorService.getDoctorUnavailableDates(doctorId));
+        }
+
 
 
 

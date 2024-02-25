@@ -19,6 +19,7 @@ public class ApiMappings {
     public static final String REMOVE_DOCTOR_AVAILABILITY_URL = "/availability/{id}/remove";
     public static final String UPDATE_DOCTOR_WEEKLY_SCHEDULE_URL = "/schedule/{id}";
     public static final String GET_DOCTOR_AVAILABILITY_URL = "/availability";
+    public static final String  GET_DOCTOR_UNAVAILABLE_DAYS_URL = "/unavailableDays/{id}";
 
     //== AppointmentController ApiRoutes ==
     public static final String APPOINTMENT_BASE_URL = "/api/v1/appointment";

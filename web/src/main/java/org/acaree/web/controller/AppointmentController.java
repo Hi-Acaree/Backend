@@ -52,7 +52,7 @@ public class AppointmentController {
             @ApiResponse(responseCode = "201", description = "Appointment booked successfully"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    @PostMapping(BOOK_APPOINTMENT_BY_PATIENT_URL)
+    @PostMapping(BOOK_APPOINTMENT_BY_PATIENT_URL) // http://localhost:8080/api/v1/appointment/book/appointment
     public ResponseEntity<Appointment> bookAppointmentByPatient(@Valid
             @RequestBody AppointmentBookingDTO bookingDTO){
         log.info("Inside bookAppointmentByPatient() method of AppointmentController class");

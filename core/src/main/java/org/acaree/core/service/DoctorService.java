@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.print.Doc;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -447,6 +448,37 @@ public class DoctorService {
         log.info("Doctor with id: {} availability retrieved", id);
         log.info("Doctor availability: {}", availableDates);
         return availableDates;
+    }
+
+    /**
+     * Get unavailable dates for a doctor.
+     * @param id the id of the doctor.
+     * @return the unavailable dates for the doctor.
+     */
+
+    @Transactional(readOnly = true)
+    public List<Doctor.DaysOfTheWeek> getDoctorUnavailableDates(long id) {
+        if (id < 0) {
+            throw new DoctorException("Invalid doctor input", ErrorType.DOCTOR_INVALID_INPUT);
+        }
+
+        Doctor doctor = getDoctor(id).orElseThrow(() -> new DoctorException("Doctor with id: " + id + " not found",
+                ErrorType.DOCTOR_NOT_FOUND));
+
+        List<Doctor.DaysOfTheWeek> availableDays = doctorAvailabilityRepository.findAvailableDaysByDoctorId(id);
+
+        if (availableDays.isEmpty()) {
+            return Arrays.asList(Doctor.DaysOfTheWeek.values());
+        }
+
+        // Calculate unavailable days
+        List<Doctor.DaysOfTheWeek> allDays = Arrays.asList(Doctor.DaysOfTheWeek.values());
+        List<Doctor.DaysOfTheWeek> unavailableDays = new ArrayList<>(allDays);
+        unavailableDays.removeAll(availableDays);
+
+        log.info("Doctor with id: {} unavailable dates retrieved", id);
+        log.info("Doctor unavailable dates: {}", unavailableDays);
+        return unavailableDays;
     }
 
 

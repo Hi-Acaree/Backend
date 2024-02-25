@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -20,5 +21,10 @@ public interface DoctorAvailabilityRepository extends JpaRepository<DoctorAvaila
 
     @Query("SELECT da FROM DoctorAvailability da WHERE da.dayOfWeek = ?1 AND da.doctor.id = ?2")
     Optional<DoctorAvailability> findByDayAndDoctorId(Doctor.DaysOfTheWeek day, Long doctorId);
+
+    // fetch unavailable days for the given doctor id
+    @Query("SELECT da.dayOfWeek FROM DoctorAvailability da WHERE da.doctor.id = ?1")
+    List<Doctor.DaysOfTheWeek> findAvailableDaysByDoctorId(Long doctorId);
+
 
 }

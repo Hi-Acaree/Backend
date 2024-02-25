@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.sql.Time;
 import java.time.LocalDateTime;
@@ -54,6 +55,8 @@ class AppointmentServiceTest {
     private PatientRepository patientRepository;
     @Mock
     private ObjectMapper objectMapper;
+    @Mock
+    private SimpMessagingTemplate simpMessagingTemplate;
 
     @Mock
     private PatientService patientService;

@@ -52,6 +52,8 @@ public class AppConfig {
 
     }
 
+    //== JavaMailSender ==
+
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
@@ -66,6 +68,7 @@ public class AppConfig {
         properties.put("mail.debug", "true");
         return mailSender;
     }
+
 
 
 }

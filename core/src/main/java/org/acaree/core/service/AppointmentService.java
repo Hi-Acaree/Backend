@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,12 +47,14 @@ public class AppointmentService {
     private final AppointmentNotificationPublisher appointmentNotificationPublisher;
     private final ObjectMapper objectMapper;
     private final PatientRepository patientRepository;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Autowired
     public AppointmentService(AppointmentRepository appointmentRepository, TimeSlotService timeSlotService,
                               PatientService patientService, DoctorService doctorService,
                               AppointmentNotificationPublisher appointmentNotificationPublisher,
-                              ObjectMapper objectMapper, PatientRepository patientRepository) {
+                              ObjectMapper objectMapper, PatientRepository patientRepository,
+                              SimpMessagingTemplate simpMessagingTemplate) {
         this.appointmentRepository = appointmentRepository;
         this.timeSlotService = timeSlotService;
         this.patientService = patientService;
@@ -59,6 +62,7 @@ public class AppointmentService {
         this.appointmentNotificationPublisher = appointmentNotificationPublisher;
         this.objectMapper = objectMapper;
         this.patientRepository = patientRepository;
+        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     //== public methods ==
@@ -103,6 +107,7 @@ public class AppointmentService {
         String messageJson = objectMapper.writeValueAsString(message);
         appointmentNotificationPublisher.publishMessage("appointment-queue", messageJson);
 
+        simpMessagingTemplate.convertAndSend("/topic/newAppointment", messageJson);
         return appointment;
     }
 

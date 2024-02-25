@@ -1,4 +1,5 @@
 <transportConnectors>
     <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
+
     <!-- other connectors -->
 </transportConnectors>

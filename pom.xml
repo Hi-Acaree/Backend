@@ -132,11 +132,15 @@
                 <version>${jackson.version}</version>
             </dependency>
 
+            <!-- jackson-datatype-jsr310 -->
+
             <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jsr310</artifactId>
                 <version>${jackson-datatype.version}</version>
             </dependency>
+
+            <!-- springdoc openapi (swagger)  -->
 
             <dependency>
                 <groupId>org.springdoc</groupId>
@@ -144,12 +148,16 @@
                 <version>${springdoc-openapi-ui.version}</version>
             </dependency>
 
+            <!-- jsonassert -->
+
             <dependency>
                 <groupId>org.skyscreamer</groupId>
                 <artifactId>jsonassert</artifactId>
                 <version>${jsonassert.version}</version>
                 <scope>test</scope>
             </dependency>
+
+            <!-- javax.annotation-api -->
 
                 <dependency>
                     <groupId>javax.annotation</groupId>
@@ -159,6 +167,9 @@
                 </dependency>
 
         </dependencies>
+
+
+
 
     </dependencyManagement>
 
