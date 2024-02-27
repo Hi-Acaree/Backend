@@ -1,5 +1,8 @@
 <transportConnectors>
-    <transportConnector name="openwire" uri="tcp://0.0.0.0:61616"/>
-
-    <!-- other connectors -->
+    <!-- OpenWire connector -->
+    <transportConnector name="openwire" uri="tcp://0.0.0.0:61617"/>
+     <transportConnector name="amqp" uri="amqp://0.0.0.0:5672"/>
+     <transportConnector name="stomp" uri="stomp://0.0.0.0:61613"/>
+     <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883"/>
+    <transportConnector name="wss" uri="ws://0.0.0.0:61619"/>
 </transportConnectors>

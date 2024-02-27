@@ -1,22 +1,21 @@
 package org.acaree.core.service;
 import lombok.extern.slf4j.Slf4j;
+import org.acaree.core.config.AwsConfig;
 import org.acaree.core.exceptions.PersonException;
 import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Objects;
 
 /**
@@ -31,84 +30,112 @@ import java.util.Objects;
 @Slf4j
 public class PersonService {
     private final PersonRepository personRepository;
-    private final FileStorageService fileStorageService;
-    private final ResourceLoader resourceLoader;
+    private final S3Client s3Client;
+    private final Environment env;
 
     @Autowired
-    public PersonService(PersonRepository personRepository, FileStorageService fileStorageService,
-    ResourceLoader resourceLoader) {
+    public PersonService(PersonRepository personRepository,
+                         Environment env,
+                         S3Client s3Client) {
         this.personRepository = personRepository;
-        this.fileStorageService = fileStorageService;
-        this.resourceLoader = resourceLoader;
-    }
+        this.env = env;
+        this.s3Client = s3Client;
 
+    }
 
 
     /**
-     * Save the image to the file system and update the person's image path in the database
+     * This method is used to save an image to S3.
      * @param id The person's ID
-     * @param imageFile The image file to save
+     * @param imageFile The image file to be saved to S3.
+     * @throws IOException If the image cannot be read from the file system.
+     * @throws PersonException If the person with the given ID is not found.
      */
-
     public void saveImage(Long id, MultipartFile imageFile) throws IOException, PersonException {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
+        String bucketName = env.getProperty("S3_BUCKET_NAME");
+        if (Objects.isNull(imageFile)) {
+            throw new IllegalArgumentException("Image file is required");
+        }
+        if (imageFile.isEmpty()) {
+            throw new IllegalArgumentException("Image file is empty");
+        }
+        log.info("Image file size: {}", imageFile.getSize());
+        String keyName = "images/" + id + "_" + imageFile.getOriginalFilename();
 
-        // Construct a unique filename
-        String filename = id + "_" + imageFile.getOriginalFilename();
-
-        // Save the image file to the file system or specific directory
-        fileStorageService.writeFileBytes(filename, imageFile.getBytes());
-
-        // Construct and store a retrievable image path or URL
-        String imagePath = "/images/" + filename; // Adjust path as necessary
-        person.setPictureUrl(imagePath);
+        try (InputStream inputStream = imageFile.getInputStream()) {
+            s3Client.putObject(PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(keyName)
+                    .build(), RequestBody.fromInputStream(inputStream, imageFile.getSize()));
+            log.info("Image uploaded to S3: {}", keyName);
+        } catch (S3Exception e) {
+            log.error("Failed to upload image to S3", e);
+            throw new IOException("Failed to upload image to S3: " + e.getMessage());
+        }
+        person.setPictureUrl(keyName);
         personRepository.save(person);
     }
 
-
-    /*
-    * This method is used to get the image from the file system
-    * @param id The person's ID
-    * @return The image as a byte array
-    * @throws IOException If the image cannot be read from the file system
-    * @throws PersonException If the person with the given ID is not found
+    /**
+     * This method is used to get the image from S3.
+     * @param id The person's ID
+     * @return The image as a byte array.
+     * @throws PersonException If the person with the given ID is not found.
+     * @throws IOException If the image cannot be read from the file system.
      */
-    public byte[] getImage(Long id) throws PersonException, FileNotFoundException, IOException {
+    public byte[] getImage(Long id) throws PersonException, IOException {
         var person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
-
-        String imagePath = "classpath:/static" + person.getPictureUrl(); // Adjusted path
-
-        Resource resource = resourceLoader.getResource(imagePath);
-        if (!resource.exists()) {
-            throw new FileNotFoundException("Image not found at " + imagePath);
-        }
-
-//        log.info("Resolved image path: {}", resource.getURI().toString());
-
-        try (InputStream inputStream = resource.getInputStream()) {
-            return IOUtils.toByteArray(inputStream);
-        }
-    }
-
-
-    public String getImageContentType(Long id) throws FileNotFoundException, IOException, URISyntaxException {
-        Person person = personRepository.findById(id)
-                .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
-
-        String imagePath = "classpath:static" + person.getPictureUrl();
-        Resource resource = resourceLoader.getResource(imagePath);
-        if (!resource.exists()) {
+        if (Objects.isNull(person.getPictureUrl())) {
             throw new FileNotFoundException("Image not found");
         }
 
-        // Use Files.probeContentType for a more reliable content type determination
-        String contentType = Files.probeContentType(Paths.get(resource.getURI()));
-        if (contentType == null) {
-            // Fallback to manual determination or throw an error
-            throw new IllegalArgumentException("Unable to determine content type");
+        String keyName = person.getPictureUrl();
+        log.info("Fetching image with key: {}", keyName); // Log the key for debugging
+
+        try {
+            var response = s3Client.getObjectAsBytes(GetObjectRequest.builder()
+                    .bucket(env.getProperty("S3_BUCKET_NAME"))
+                    .key(keyName)
+                    .build());
+            return response.asByteArray();
+        } catch (S3Exception e) {
+            log.error("Failed to load image from S3", e); // Log the original exception for more context
+            throw new FileNotFoundException("Failed to load image from " + person.getPictureUrl() + ". Reason: " + e.getMessage());
         }
-        return contentType;
+    }
+
+
+    /**
+     * This method is used to get the content type of the image.
+     * @param id The person's ID
+     * @return The content type of the image.
+     * @throws PersonException If the person with the given ID is not found.
+     * @throws IOException If the image cannot be read from the file system.
+     */
+
+    public String getImageContentType(Long id) throws PersonException, IOException {
+        // Get the person from the database
+        Person person = personRepository.findById(id)
+                .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
+
+        // Get the content type of the image from S3
+
+        String bucketName = env.getProperty("S3_BUCKET_NAME");
+        String keyName = person.getPictureUrl();
+
+        HeadObjectRequest objectHead = HeadObjectRequest.builder()
+                .bucket(bucketName)
+                .key(keyName)
+                .build();
+        try {
+            HeadObjectResponse response = s3Client.headObject(objectHead);
+            return response.contentType();
+        } catch (S3Exception e) {
+            throw new FileNotFoundException("Failed to load image metadata for " + person.getPictureUrl());
+        }
     }
 }
+

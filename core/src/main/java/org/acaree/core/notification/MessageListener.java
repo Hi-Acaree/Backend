@@ -2,10 +2,11 @@ package org.acaree.core.notification;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
+import org.acaree.core.config.EmailConfig;
 import org.acaree.core.model.AppointmentNotificationMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.jms.annotation.JmsListener;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -31,16 +32,20 @@ import java.util.regex.Pattern;
 @Component
 @Slf4j
 public class MessageListener {
+    private final Environment env;
     private  final JavaMailSender mailSender;
 
     private final ObjectMapper objectMapper;
     private final TemplateEngine templateEngine;
     @Autowired
     public MessageListener(JavaMailSender mailSender, ObjectMapper objectMapper,
-                           TemplateEngine templateEngine) {
+                           TemplateEngine templateEngine,
+                            Environment env
+    ) {
         this.mailSender = mailSender;
         this.objectMapper = objectMapper;
         this.templateEngine = templateEngine;
+        this.env = env;
     }
 
     /**
@@ -104,7 +109,7 @@ public class MessageListener {
             helper.setTo(messageObject.getEmail());
             helper.setText(html, true);
             helper.setSubject("Appointment Confirmation");
-            helper.setFrom(System.getenv("EMAIL_FROM"));
+            helper.setFrom(Objects.requireNonNull(env.getProperty("EMAIL_FROM")));
             mailSender.send(message);
         } catch (Exception e) {
             e.printStackTrace();

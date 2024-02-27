@@ -432,7 +432,7 @@ public class AppointmentService {
         }
         String doctorName = appointment.getDoctor() != null ? appointment.getDoctor().getPersonDetails().getFirstName() + " " + appointment.getDoctor().getPersonDetails().getLastName() : "Doctor";
         String email = appointment.getPatient().getPersonDetails().getEmail();
-        String appointmentType = appointment.getType() != null ? appointment.getType() : "Unknown";
+        String appointmentType = appointment.getType() != null ? appointment.getType() : "In-Person Visit";
 
         return new AppointmentNotificationMessage(doctorName, email, appointmentType, appointment.getTimeSlot(), text);
     }

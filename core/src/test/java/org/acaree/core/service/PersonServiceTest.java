@@ -1,5 +1,6 @@
 package org.acaree.core.service;
 
+import org.acaree.core.config.AwsConfig;
 import org.acaree.core.exceptions.PersonException;
 import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;
@@ -8,21 +9,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.env.Environment;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -36,11 +33,9 @@ class PersonServiceTest {
     private PersonRepository personRepository;
 
     @Mock
-    private FileStorageService fileStorageService;
+    private S3Client s3Client;
     @Mock
-    private ResourceLoader resourceLoader;
-    @Mock
-    private Resource mockResource;
+    private Environment env;
 
 
     @InjectMocks
@@ -52,18 +47,7 @@ class PersonServiceTest {
 
     @BeforeEach
     void setUp() {
-//
-//        when(resourceLoader.getResource(anyString())).thenReturn(mockResource);
-//        when(mockResource.exists()).thenReturn(true);
-//
-//        // Mock the InputStream of the mockResource to return your imageContent
-//        ByteArrayInputStream inputStream = new ByteArrayInputStream(imageContent);
-//        when(mockResource.getInputStream()).thenReturn(inputStream);
-//        try {
-//            when(mockResource.getInputStream()).thenReturn(inputStream);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        String bucketName = "acaree-s3-bucket";
     }
 
 
@@ -73,18 +57,15 @@ class PersonServiceTest {
         Person person = new Person();
         Long personId = 1L;
         person.setId(personId);
-        String originalFilename = "testImage.jpg";
-        String expectedFilename = personId + "_" + originalFilename; // Adjusted to match the actual service logic
+        MockMultipartFile file = new MockMultipartFile("image", "test.jpg", "image/jpeg", "test image content".getBytes());
         when(personRepository.findById(personId)).thenReturn(Optional.of(person));
 
-        // When
+        // execute
         personService.saveImage(personId, imageFile);
 
-        // Then
-        verify(fileStorageService, times(1)).writeFileBytes(eq(expectedFilename), eq(imageContent));
-        verify(personRepository, times(1)).save(any(Person.class));
-        Person savedPerson = personRepository.findById(personId).get();
-        assertEquals("/images/" + expectedFilename, savedPerson.getPictureUrl()); // Adjusted to match the actual service logic
+        // Verify
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        verify(personRepository).save(person);
     }
 
 
@@ -107,25 +88,19 @@ class PersonServiceTest {
     public void testGetImageSuccess() throws IOException, PersonException {
         // Setup
         Long personId = 1L;
-        String pictureUrl = "/path/to/image.jpg";
-        byte[] imageContent = new byte[]{1, 2, 3}; // The expected content of the image file
         Person person = new Person();
         person.setId(personId);
-        person.setPictureUrl(pictureUrl);
-
-        when(mockResource.exists()).thenReturn(true);
-        when(mockResource.getInputStream()).thenReturn(new ByteArrayInputStream(imageContent));
+        person.setPictureUrl("https://test-bucket.s3.amazonaws.com/test.jpg");
 
         when(personRepository.findById(personId)).thenReturn(Optional.of(person));
-        when(resourceLoader.getResource("classpath:/static" + pictureUrl)).thenReturn(mockResource);
+        when(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).thenReturn(ResponseBytes.fromByteArray(GetObjectResponse.builder().build(), "test image content".getBytes()));
 
         // Execute
         byte[] result = personService.getImage(personId);
 
         // Verify
-        assertArrayEquals(imageContent, result);
-        verify(resourceLoader).getResource("classpath:/static" + pictureUrl);
-        verify(mockResource).getInputStream(); // Ensure that the input stream of the resource was accessed
+        assertNotNull(result);
+        assertEquals("test image content", new String(result));
     }
 
 
@@ -135,69 +110,37 @@ class PersonServiceTest {
         Long personId = 1L;
         Person person = new Person();
         person.setId(personId);
-        person.setPictureUrl("/nonexistent/image.jpg");
+        person.setPictureUrl("https://test-bucket.s3.amazonaws.com/nonexistent/image.jpg");
 
         when(personRepository.findById(personId)).thenReturn(Optional.of(person));
-        when(mockResource.exists()).thenReturn(false);
-        when(resourceLoader.getResource("classpath:static" + person.getPictureUrl())).thenReturn(mockResource);
+        when(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).thenThrow(S3Exception.class);
 
-        // Assert & Execute
+        // Assert
         assertThrows(FileNotFoundException.class, () -> {
-            personService.getImageContentType(personId);
-        });
-
-        // Verify
-        verify(resourceLoader).getResource("classpath:static" + person.getPictureUrl());
-    }
-
-
-
-    @Test
-    void getImageContentTypeSuccess() throws FileNotFoundException, IOException, URISyntaxException {
-        try (MockedStatic<Files> mockedFiles = Mockito.mockStatic(Files.class)) {
-            // Setup
-            Long personId = 1L;
-            Person person = new Person();
-            person.setId(personId);
-            person.setPictureUrl("/valid/image.jpg");
-            String expectedContentType = "image/jpeg";
-
-//            Resource mockResource = Mockito.mock(Resource.class);
-            when(resourceLoader.getResource("classpath:static" + person.getPictureUrl())).thenReturn(mockResource);
-            when(mockResource.exists()).thenReturn(true);
-            when(mockResource.getURI()).thenReturn(new URI("file:///valid/image.jpg"));
-            mockedFiles.when(() -> Files.probeContentType(Paths.get(mockResource.getURI()))).thenReturn(expectedContentType);
-            when(personRepository.findById(personId)).thenReturn(Optional.of(person));
-
             // Execute
-            String contentType = personService.getImageContentType(personId);
-
-            // Assert
-            assertEquals(expectedContentType, contentType);
-        }
+            personService.getImage(personId);
+        });
     }
 
 
 
+
     @Test
-    public void testGetImageContentTypeNotFound() {
+    void getImageContentTypeSuccessfully() throws IOException, PersonException {
         // Setup
         Long personId = 1L;
         Person person = new Person();
         person.setId(personId);
-        person.setPictureUrl("/nonexistent/image.jpg");
+        person.setPictureUrl("https://test-bucket.s3.amazonaws.com/test.jpg");
 
         when(personRepository.findById(personId)).thenReturn(Optional.of(person));
-        when(mockResource.exists()).thenReturn(false);
-        when(resourceLoader.getResource("classpath:static" + person.getPictureUrl())).thenReturn(mockResource);
+        when(s3Client.headObject(any(HeadObjectRequest.class))).thenReturn(HeadObjectResponse.builder().contentType("image/jpeg").build());
 
-        // Assert & Execute
-        assertThrows(FileNotFoundException.class, () -> {
-            personService.getImageContentType(personId);
-        });
+        // Execute
+        String contentType = personService.getImageContentType(personId);
 
         // Verify
-        verify(resourceLoader).getResource("classpath:static" + person.getPictureUrl());
+        assertEquals("image/jpeg", contentType);
     }
 
 }

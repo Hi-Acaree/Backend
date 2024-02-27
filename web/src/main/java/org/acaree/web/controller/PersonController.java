@@ -69,10 +69,11 @@ public class PersonController {
             })
     public ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
         try {
+            // Get the image data
             byte[] imageData = personService.getImage(id);
             HttpHeaders headers = new HttpHeaders();
 
-            // Assuming you have a method to get the stored content type of the image
+            // Set the content type of the image
             String contentType = personService.getImageContentType(id);
 
             if (contentType != null && !contentType.isEmpty()) {
@@ -85,7 +86,8 @@ public class PersonController {
             return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (PersonException | URISyntaxException e) {
+        } catch (PersonException e) {
+            log.error("Error getting image for person with ID: {} {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
