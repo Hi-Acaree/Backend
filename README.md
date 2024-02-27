@@ -52,6 +52,6 @@ Acknowledgments
 Our dedicated team of developers and healthcare professionals working tirelessly to bring this project to life.
 All our early users and testers providing valuable feedback during the initial phases.
 Contact
-For support, feedback, or inquiries, please contact us at support@acaree.com.
+For support, feedback, or inquiries, please contact us at ak@acaree.com.
 
 Thank you for choosing Acaree Virtual Clinic for your digital healthcare needs. We are committed to continuously improving our platform to better serve our users and advance the healthcare industry.
