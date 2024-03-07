@@ -28,7 +28,6 @@ import static org.acaree.web.ApiMappings.*;
 
 @Slf4j
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping(APPOINTMENT_BASE_URL)
 public class AppointmentController {
     private final AppointmentService appointmentService;

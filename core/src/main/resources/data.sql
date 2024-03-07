@@ -22,8 +22,8 @@ VALUES
     (27, 'David', 'Miller', 'david.miller@example.com', '2222222222', 'images/michael-amadeus-oidJ1WGkIeY-unsplash.jpg'),
     (28, 'Emily', 'Davis', 'emily.davis@example.com', '1111111111', 'images/muhammad-hicham--3HE32KRqJs-unsplash.jpg'),
     (29, 'Michael', 'Jones', 'michael.jones@example.com', '0000000000', 'images/masao-mask-PmSR52VQ2SE-unsplash.jpg'),
-    (30, 'Sophia', 'Taylor', 'sophia.taylor@example.com', '9999999999', 'images/doctor-2337835_1280.jpg')
-    ON DUPLICATE KEY UPDATE id=VALUES(id);
+    (30, 'Sophia', 'Taylor', 'sophia.taylor@example.com', '9999999999', 'images/doctor-2337835_1280.jpg');
+-- ON DUPLICATE KEY UPDATE id=VALUES(id);
 
 
 
@@ -54,8 +54,8 @@ INSERT INTO doctor (person_id, specialization, hospital_name, department_name) V
                                                                                    (27, 'Surgery', 'Southwest Hospital', 'Surgery Department'),
                                                                                    (28, 'Urology', 'Northwest Hospital', 'Urology Department'),
                                                                                    (29, 'Cardiology', 'West Coast Hospital', 'Cardiology Department'),
-                                                                                   (30, 'Dermatology', 'Central Hospital', 'Dermatology Department')
-ON DUPLICATE KEY UPDATE person_id=VALUES(person_id);
+                                                                                   (30, 'Dermatology', 'Central Hospital', 'Dermatology Department');
+-- ON DUPLICATE KEY UPDATE person_id=VALUES(person_id);
 
 INSERT INTO doctor_availability (doctor_id, day_of_week) VALUES
                                                              (1, 'MONDAY'),

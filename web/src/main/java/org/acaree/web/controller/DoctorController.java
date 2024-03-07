@@ -34,7 +34,6 @@ import static org.springframework.http.HttpStatus.*;
 
 @Slf4j
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping(BASE_URL)
 public class DoctorController {
 

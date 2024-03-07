@@ -8,15 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.exceptions.PersonException;
 import org.acaree.core.service.PersonService;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.http.CacheControl;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
 
 import static org.acaree.web.ApiMappings.*;
 
@@ -68,6 +67,11 @@ public class PersonController {
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             })
     public ResponseEntity<byte[]> getUserImage(@PathVariable Long id) {
+
+        //check if the image is available
+        if (!personService.isImageAvailable(id)) {
+            return ResponseEntity.notFound().build();
+        }
         try {
             // Get the image data
             byte[] imageData = personService.getImage(id);
@@ -83,6 +87,7 @@ public class PersonController {
             }
 
             headers.setContentLength(imageData.length);
+            headers.setCacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).getHeaderValue()); // Cache the image for 60 seconds
             return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();

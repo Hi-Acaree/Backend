@@ -137,5 +137,9 @@ public class PersonService {
             throw new FileNotFoundException("Failed to load image metadata for " + person.getPictureUrl());
         }
     }
+
+    public boolean isImageAvailable(Long id) {
+        return personRepository.findById(id).map(Person::getPictureUrl).isPresent();
+    }
 }
 
