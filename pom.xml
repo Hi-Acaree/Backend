@@ -48,6 +48,11 @@
         <javax.servlet.version>4.0.1</javax.servlet.version>
         <commons-io.version>2.15.1</commons-io.version>
         <spring-test.version>6.1.3</spring-test.version>
+        <depgraph-maven-plugin.version>4.0.3</depgraph-maven-plugin.version>
+        <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
+        <maven-javadoc-plugin.version>3.3.0</maven-javadoc-plugin.version>
+        <spring-boot-maven-plugin.version>3.2.2</spring-boot-maven-plugin.version>
+
 
 </properties>
 
@@ -203,35 +208,52 @@
 
 
     <build>
+        <pluginManagement>
         <plugins>
             <!-- Maven dep graph plugin -->
             <plugin>
                 <groupId>com.github.ferstl</groupId>
                 <artifactId>depgraph-maven-plugin</artifactId>
-                <version>4.0.3</version>
+                <version>${depgraph-maven-plugin.version}</version>
+            </plugin>
+
+            <!-- Maven Javadoc Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>generate-javadocs</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>javadoc</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <subpackages>org.acaree.core</subpackages>
+                    <excludes>
+                        <exclude>**/exceptions/**</exclude>
+                    </excludes>
+                </configuration>
             </plugin>
             <!-- Maven Checkstyle Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>${maven-checkstyle-plugin.version}</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot-maven-plugin.version}</version>
                 <configuration>
-                    <configLocation>checkStyle.xml</configLocation>
-                    <encoding>UTF-8</encoding>
-                    <consoleOutput>true</consoleOutput>
-                    <failsOnError>true</failsOnError>
-                    <linkXRef>false</linkXRef>
+                    <mainClass>org.acaree.WebMain</mainClass>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
+        </pluginManagement>
     </build>
 </project>
