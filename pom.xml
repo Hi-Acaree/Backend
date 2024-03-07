@@ -184,6 +184,12 @@
 
     <build>
         <plugins>
+            <!-- Maven dep graph plugin -->
+            <plugin>
+                <groupId>com.github.ferstl</groupId>
+                <artifactId>depgraph-maven-plugin</artifactId>
+                <version>4.0.3</version>
+            </plugin>
             <!-- Maven Checkstyle Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -206,6 +212,10 @@
                     </execution>
                 </executions>
             </plugin>
+
+
+
+
         </plugins>
     </build>
 </project>
