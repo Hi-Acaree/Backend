@@ -1,0 +1,139 @@
+{
+  "taskDefinitionArn": "arn:aws:ecs:us-east-1:636541086557:task-definition/my-spring-boot-app:31",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "${IMAGE_URI}",
+      "cpu": 256,
+      "memory": 512,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "EMAIL_PORT",
+          "value": "587"
+        },
+        {
+          "name": "BROKER_USER",
+          "value": "admin"
+        },
+        {
+          "name": "S3_REGION",
+          "value": "us-east-1"
+        },
+        {
+          "name": "EMAIL_HOST",
+          "value": "mail.optonline.net"
+        },
+        {
+          "name": "S3_BUCKET_NAME",
+          "value": "acaree-s3-bucket"
+        },
+        {
+          "name": "EMAIL_FROM",
+          "value": "aquaterra@optonline.net"
+        },
+        {
+          "name": "BROKER_URL",
+          "value": "ssl://b-901e6d40-ac12-44ce-8492-9f6e5f31463a-1.mq.us-east-1.amazonaws.com:61617"
+        },
+        {
+          "name": "DATABASE_URL",
+          "value": "jdbc:mysql://dbnew.cfaqugiyg251.us-east-1.rds.amazonaws.com:3306/new_db?useSSL=false&serverTimezone=UTC"
+        },
+        {
+          "name": "EMAIL_PROTOCOL",
+          "value": "smtp"
+        },
+        {
+          "name": "FRONTEND_DOMAIN",
+          "value": "http://my-aws-frontend-bucket.s3-website-us-east-1.amazonaws.com"
+        },
+        {
+          "name": "DATABASE_USER",
+          "value": "admin"
+        }
+      ],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/my-spring-boot-app",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "secrets": [
+        {
+          "name": "EMAIL_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:EMAIL_PASSWORD-TAkvUV"
+        },
+        {
+          "name": "DATABASE_PASS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:DATABASE_PASS-WQJOwW"
+        },
+        {
+          "name": "BROKER_PASSWORD",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:BROKER_PASSWORD-Ao72Be"
+        },
+        {
+          "name": "S3_SECRET_KEY",
+            "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:S3_SECRET_KEY-0qdTrq"
+        },
+        {
+          "name": "S3_ACCESS_KEY",
+            "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:S3_ACCESS_KEY-XtkJM0"
+        }
+      ]
+    }
+  ],
+  "family": "my-spring-boot-app",
+  "executionRoleArn": "arn:aws:iam::636541086557:role/ecsTaskExecutionRole",
+  "networkMode": "awsvpc",
+  "revision": 31,
+  "volumes": [],
+  "status": "ACTIVE",
+  "requiresAttributes": [
+    {
+      "name": "com.amazonaws.ecs.capability.logging-driver.awslogs"
+    },
+    {
+      "name": "ecs.capability.execution-role-awslogs"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.ecr-auth"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.19"
+    },
+    {
+      "name": "ecs.capability.execution-role-ecr-pull"
+    },
+    {
+      "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+    },
+    {
+      "name": "ecs.capability.task-eni"
+    }
+  ],
+  "placementConstraints": [],
+  "compatibilities": [
+    "EC2",
+    "FARGATE"
+  ],
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "256",
+  "memory": "512",
+  "registeredAt": "2024-02-28T23:50:23.125Z",
+  "registeredBy": "arn:aws:iam::636541086557:root",
+  "tags": []
+}

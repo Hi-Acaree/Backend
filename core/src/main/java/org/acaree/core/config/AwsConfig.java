@@ -10,8 +10,6 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.net.URI;
-
 @Configuration
 @Getter
 @Slf4j
@@ -30,6 +28,10 @@ public class AwsConfig {
     @Value("${S3_BUCKET_NAME}")
     private String bucketName;
 
+    @Value("${S3_ENDPOINT}")
+    private String endpoint;
+
+
     public AwsConfig() {
         log.info("AWS Config: " + this);
     }
@@ -44,5 +46,11 @@ public class AwsConfig {
                     .build();
         return s3Client;
     }
+
+
+
+
+
+
 
 }

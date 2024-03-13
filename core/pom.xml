@@ -75,10 +75,15 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
 
-        <!-- Aws SDK -->
+        <!-- Aws SDK S3 -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
+        </dependency>
+        <!-- Aws SDK Secrets -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>secretsmanager</artifactId>
         </dependency>
 
         <!-- jackson -->
@@ -167,7 +172,7 @@
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>test</scope>
+            <scope>compile</scope>
         </dependency>
         <!-- spring -test -->
         <dependency>
