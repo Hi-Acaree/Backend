@@ -60,3 +60,4 @@ jobs:
 
       - name: Update ECS service
         run: aws ecs update-service --cluster DevKluster --service acaree-service --task-definition my-spring-boot-app
+
