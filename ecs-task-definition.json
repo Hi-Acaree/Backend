@@ -75,8 +75,8 @@
           "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:EMAIL_PASSWORD-TAkvUV"
         },
         {
-          "name": "DATABASE_PASS",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:DATABASE_PASS-WQJOwW"
+          "name": "DB_PASS",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:DB_PASS-62CTY9"
         },
         {
           "name": "BROKER_PASSWORD",
