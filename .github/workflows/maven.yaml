@@ -9,7 +9,7 @@ jobs:
     name: Build and deploy Acaree to AWS
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code into github actions runner
+      - name: Checkout code into GitHub Actions runner
         uses: actions/checkout@v3
 
       - name: Set up JDK 19
@@ -19,31 +19,23 @@ jobs:
           java-version: 19
           cache: maven
 
-      - name: Unit Tests
+      - name: Run unit tests
         run: mvn -B test --file pom.xml
 
       - name: Build application
-        run: |
-          mvn clean
-          mvn -B package --file pom.xml
-          
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: us-east-1
-
+        run: mvn clean package --file pom.xml
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
-              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              aws-region: us-east-1
-    
-      - name: Build a docker image
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -51,9 +43,7 @@ jobs:
           push: true
           tags: ${{ steps.login-ecr.outputs.registry }}/apt-schedule:latest
 
-
-
-      - name: Render amazon ecs task definition
+      - name: Render Amazon ECS task definition
         id: render-task-definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -61,12 +51,10 @@ jobs:
           container-name: app
           image: ${{ steps.login-ecr.outputs.registry }}/apt-schedule:latest
 
-          
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-            task-definition: ${{ steps.render-task-definition.outputs.task-definition }}
-            service: acaree-service
-            cluster: DevKluster
-            wait-for-service-stability: true
-          
+          task-definition: ${{ steps.render-task-definition.outputs.task-definition }}
+          service: acaree-service
+          cluster: DevKluster
+          wait-for-service-stability: true
