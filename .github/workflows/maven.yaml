@@ -57,7 +57,7 @@ jobs:
         id: render-task-definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition-template: ecs-task-definition.json
+          task-definition: ecs-task-definition.json
           container-name: app
           image: ${{ steps.login-ecr.outputs.registry }}/apt-schedule:latest
 
