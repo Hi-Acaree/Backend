@@ -23,9 +23,7 @@ jobs:
         run: mvn -B test --file pom.xml
 
       - name: Build application
-        run: |
-          mvn clean
-          mvn -B package --file pom.xml
+        run: mvn -B clean package --file pom.xml
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -35,21 +33,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-1
 
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-              aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-              aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-              aws-region: us-east-1
-
-      - name: Register updated task definition
-        run: aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
-
-      - name: Update ECS service
-        run: aws ecs update-service --cluster DevKluster --service acaree-service --task-definition my-spring-boot-app
-
-      - name: Build a docker image
+      - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
@@ -57,21 +41,15 @@ jobs:
           push: true
           tags: ${{ steps.login-ecr.outputs.registry }}/apt-schedule:latest
 
-
-
-      - name: Render amazon ecs task definition
-        id: render-task-definition
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          task-definition: ecs-task-definition.json
-          container-name: app
-          image: ${{ steps.login-ecr.outputs.registry }}/apt-schedule:latest
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
+      - name: Register updated task definition
+        run: aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
 
-      - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-            task-definition: ${{ steps.render-task-definition.outputs.task-definition }}
-            service: acaree-service
-            cluster: DevKluster
-            wait-for-service-stability: true
+      - name: Update ECS service
+        run: aws ecs update-service --cluster DevKluster --service acaree-service --task-definition my-spring-boot-app
