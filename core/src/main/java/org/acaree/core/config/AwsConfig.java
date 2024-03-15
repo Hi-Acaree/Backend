@@ -41,10 +41,4 @@ public class AwsConfig {
                     .build();
     }
 
-
-
-
-
-
-
 }
