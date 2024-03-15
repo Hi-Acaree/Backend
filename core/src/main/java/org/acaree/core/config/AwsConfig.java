@@ -31,20 +31,14 @@ public class AwsConfig {
     @Value("${S3_ENDPOINT}")
     private String endpoint;
 
-
-    public AwsConfig() {
-        log.info("AWS Config: " + this);
-    }
-
     @Bean
     public S3Client s3Client() {
-        S3Client s3Client;
 
-            s3Client = S3Client.builder()
+
+            return S3Client.builder()
                     .region(Region.of(awsRegion))
                     .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
                     .build();
-        return s3Client;
     }
 
 
