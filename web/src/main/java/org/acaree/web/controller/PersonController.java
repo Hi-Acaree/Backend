@@ -35,7 +35,6 @@ import static org.acaree.web.ApiMappings.*;
 public class PersonController {
     private final PersonService personService;
 
-    @Autowired
     public PersonController(PersonService personService) {
         this.personService = personService;
     }
