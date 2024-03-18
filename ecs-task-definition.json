@@ -76,7 +76,7 @@
         },
         {
           "name": "DATABASE_PASSWORD",
-          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:DB_PASS-62CTY9"
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:636541086557:secret:DATABASE_PASSWORD-pnENMN"
         },
         {
           "name": "BROKER_PASSWORD",
