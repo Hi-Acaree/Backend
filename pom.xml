@@ -190,11 +190,6 @@
                 <version>${awSdk.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>secretsmanager</artifactId>
-                <version>${awSdk.version}</version>
-            </dependency>
 
 
             <!-- spring -test -->

@@ -40,7 +40,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ steps.login-ecr.outputs.registry }}/apt-schedule:latest
-          # Add an output for the image name
+          build-args: |
+            --no-cache
         id: docker-build
 
       - name: Configure AWS credentials

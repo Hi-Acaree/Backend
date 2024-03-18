@@ -23,8 +23,8 @@ import java.util.Properties;
 @Configuration
 @EnableScheduling
 @Slf4j
-@ComponentScan(basePackages = {"org.acaree.core.repository, " +
-        "org.acaree.core.service, org.acaree.core.model" + "org.acaree.core.notification"})
+@ComponentScan(basePackages = {"org.acaree.core.repository",
+        "org.acaree.core.service", "org.acaree.core.model", "org.acaree.core.notification"})
 public class AppConfig {
     private final Environment env;
 

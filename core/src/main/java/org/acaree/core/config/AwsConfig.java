@@ -34,7 +34,7 @@ public class AwsConfig {
     private String endpoint;
 
     public AwsConfig() {
-        log.info("AWS Config: " + this);
+        log.info("AWS Config: accessKey={}, secretKey={}, awsRegion={}", accessKey, secretKey, awsRegion);
     }
 
     @Bean
@@ -47,5 +47,7 @@ public class AwsConfig {
                 .build();
         return s3Client;
     }
+
+
 
 }
