@@ -1,6 +1,5 @@
 package org.acaree.core.service;
 
-import org.acaree.core.config.AwsConfig;
 import org.acaree.core.exceptions.PersonException;
 import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;

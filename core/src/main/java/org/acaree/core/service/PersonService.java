@@ -1,6 +1,5 @@
 package org.acaree.core.service;
 import lombok.extern.slf4j.Slf4j;
-import org.acaree.core.config.AwsConfig;
 import org.acaree.core.exceptions.PersonException;
 import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;
@@ -35,14 +34,12 @@ public class PersonService {
     private final S3Client s3Client;
     private final Environment env;
 
-    @Autowired
-    public PersonService(PersonRepository personRepository,
-                         Environment env,
-                         S3Client s3Client) {
-        this.personRepository = personRepository;
-        this.env = env;
-        this.s3Client = s3Client;
 
+    @Autowired
+    public PersonService(PersonRepository personRepository, S3Client s3Client, Environment env) {
+        this.personRepository = personRepository;
+        this.s3Client = s3Client;
+        this.env = env;
     }
 
 

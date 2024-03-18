@@ -10,12 +10,10 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 
-import java.net.URI;
-
 @Configuration
 @Getter
 @Slf4j
-public class AwsConfig {
+public class S3Config {
 
     @Value("${S3_ACCESS_KEY}")
     private String accessKey;
@@ -33,7 +31,7 @@ public class AwsConfig {
     @Value("${S3_ENDPOINT}")
     private String endpoint;
 
-    public AwsConfig() {
+    public S3Config() {
         log.info("AWS Config: accessKey={}, secretKey={}, awsRegion={}", accessKey, secretKey, awsRegion);
     }
 
@@ -44,16 +42,8 @@ public class AwsConfig {
         s3Client = S3Client.builder()
                 .region(Region.of(awsRegion))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
-                .endpointOverride(endpoint())
                 .build();
         return s3Client;
     }
-
-    @Bean
-    public URI endpoint() {
-        return URI.create(endpoint);
-    }
-
-
 
 }
