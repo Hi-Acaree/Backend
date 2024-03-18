@@ -44,8 +44,14 @@ public class AwsConfig {
         s3Client = S3Client.builder()
                 .region(Region.of(awsRegion))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+                .endpointOverride(endpoint())
                 .build();
         return s3Client;
+    }
+
+    @Bean
+    public URI endpoint() {
+        return URI.create(endpoint);
     }
 
 
