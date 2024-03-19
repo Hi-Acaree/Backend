@@ -5,6 +5,7 @@ import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +36,7 @@ public class PersonService {
 
 
     @Autowired
-    public PersonService(Environment env, PersonRepository personRepository, S3Client s3Client) {
+    public PersonService(Environment env, PersonRepository personRepository, @Lazy S3Client s3Client) {
         this.personRepository = personRepository;
         this.s3Client = s3Client;
         this.env = env;
