@@ -14,6 +14,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Configuration
 @Getter
 @Slf4j
+@ComponentScan(basePackages = {"org.acaree.core.repository",
+        "org.acaree.core.service"})
 public class S3Config {
 
     @Value("${S3_ACCESS_KEY}")

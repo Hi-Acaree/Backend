@@ -17,7 +17,6 @@ import java.io.File;
 import java.util.Arrays;
 
 @SpringBootApplication
-@Import({S3Config.class})
 public class WebMain {
 
     public static void main(String[] args) {
