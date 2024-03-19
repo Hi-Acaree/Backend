@@ -31,10 +31,6 @@ public class S3Config {
     @Value("${S3_ENDPOINT}")
     private String endpoint;
 
-    public S3Config() {
-        log.info("AWS Config: accessKey={}, secretKey={}, awsRegion={}", accessKey, secretKey, awsRegion);
-    }
-
     @Bean
     public S3Client s3Client() {
         S3Client s3Client;

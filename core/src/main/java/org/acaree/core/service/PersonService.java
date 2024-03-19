@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +35,7 @@ public class PersonService {
 
 
     @Autowired
-    public PersonService(PersonRepository personRepository, S3Client s3Client, Environment env) {
+    public PersonService(Environment env, PersonRepository personRepository, S3Client s3Client) {
         this.personRepository = personRepository;
         this.s3Client = s3Client;
         this.env = env;
