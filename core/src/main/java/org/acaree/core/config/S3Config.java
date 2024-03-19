@@ -28,8 +28,6 @@ public class S3Config {
     @Value("${S3_BUCKET_NAME}")
     private String bucketName;
 
-    @Value("${S3_ENDPOINT}")
-    private String endpoint;
 
     @Bean
     public S3Client s3Client() {
