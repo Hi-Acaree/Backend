@@ -11,7 +11,8 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**") // Apply CORS to all paths
-                .allowedOrigins("http://theacaree.com.s3-website-us-east-1.amazonaws.com",
+                .allowedOrigins("http://theacaree.com",
+                        "http://theacaree.com.s3-website-us-east-1.amazonaws.com",
                         "http://localhost:3000") // Allow  frontend domain
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Allowed HTTP methods
                 .allowedHeaders("*")
