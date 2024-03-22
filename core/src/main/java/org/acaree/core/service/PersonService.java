@@ -101,7 +101,7 @@ public class PersonService {
                     .build());
             return response.asByteArray();
         } catch (S3Exception e) {
-            log.error("Failed to load image from S3", e); // Log the original exception for more context
+            log.error("Failed to load image from S3 with ID: {}, Error: {}", id, e.getMessage()); // Log the original exception for more context
             throw new FileNotFoundException("Failed to load image from " + person.getPictureUrl() + ". Reason: " + e.getMessage());
         }
     }
