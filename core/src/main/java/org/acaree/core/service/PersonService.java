@@ -5,6 +5,7 @@ import org.acaree.core.model.Person;
 import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,8 @@ import java.util.Objects;
 @Service
 @Slf4j
 public class PersonService {
+    @Value("${S3_BUCKET_BASE_URL}")
+    private String bucketBaseUrl;
 
 
     private final PersonRepository personRepository;
@@ -91,13 +94,13 @@ public class PersonService {
             throw new FileNotFoundException("Image not found");
         }
 
-        String keyName = person.getPictureUrl();
+        String keyName = bucketBaseUrl + person.getPictureUrl();
         log.info("Fetching image with key: {}", keyName); // Log the key for debugging
 
         try {
             var response = s3Client.getObjectAsBytes(GetObjectRequest.builder()
                     .bucket(env.getProperty("S3_BUCKET_NAME"))
-                    .key(keyName)
+                    .key(person.getPictureUrl())
                     .build());
             return response.asByteArray();
         } catch (S3Exception e) {
