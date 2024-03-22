@@ -14,30 +14,17 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Getter
 @Slf4j
 public class S3Config {
-
-    @Value("${S3_ACCESS_KEY}")
-    private String accessKey;
-
-    @Value("${S3_SECRET_KEY}")
-    private String secretKey;
-
-    @Value("${S3_REGION}")
-    private String awsRegion;
-
-
     @Value("${S3_BUCKET_NAME}")
     private String bucketName;
 
 
     @Bean
-    public S3Client s3Client() {
-        S3Client s3Client;
-
-        s3Client = S3Client.builder()
-                .region(Region.of(awsRegion))
-                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
+    public S3Client s3Client(@Value("${S3_REGION}") String region) {
+        return S3Client.builder()
+                .region(Region.of(region))
                 .build();
-        return s3Client;
     }
+
+
 
 }
