@@ -39,7 +39,7 @@ public class PersonService {
 
 
     @Autowired
-    public PersonService(Environment env, PersonRepository personRepository, @Lazy S3Client s3Client) {
+    public PersonService(Environment env, PersonRepository personRepository, S3Client s3Client) {
         this.personRepository = personRepository;
         this.s3Client = s3Client;
         this.env = env;

@@ -89,7 +89,9 @@ public class PersonController {
             headers.setCacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).getHeaderValue()); // Cache the image for 60 seconds
             return new ResponseEntity<>(imageData, headers, HttpStatus.OK);
         } catch (IOException e) {
+            log.error("Error getting image for person with ID: {} {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+
         } catch (PersonException e) {
             log.error("Error getting image for person with ID: {} {}", id, e.getMessage());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
