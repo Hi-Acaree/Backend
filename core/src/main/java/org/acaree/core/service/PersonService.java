@@ -31,9 +31,6 @@ public class PersonService {
     @Value("${S3_BUCKET_BASE_URL}")
     private String bucketBaseUrl;
 
-    @Value("${S3_BUCKET_NAME}")
-    private String bucketName;
-
 
     private final PersonRepository personRepository;
     private final S3Client s3Client;
