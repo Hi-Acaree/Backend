@@ -58,7 +58,7 @@ public class PersonService {
     public void saveImage(Long id, MultipartFile imageFile) throws IOException, PersonException {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
-
+        String bucketName = env.getProperty("S3_BUCKET_NAME");
         if (Objects.isNull(imageFile)) {
             throw new IllegalArgumentException("Image file is required");
         }
@@ -127,6 +127,7 @@ public class PersonService {
 
         // Get the content type of the image from S3
 
+        String bucketName = env.getProperty("S3_BUCKET_NAME");
         String keyName = person.getPictureUrl();
 
         HeadObjectRequest objectHead = HeadObjectRequest.builder()
