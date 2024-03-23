@@ -15,9 +15,6 @@ import software.amazon.awssdk.services.s3.S3Client;
 @Slf4j
 public class S3Config {
 
-    @Value("${S3_BUCKET_NAME}")
-    private String bucketName;
-
     @Value("${AWS_REGION}")
     private String region;
 

@@ -6,7 +6,6 @@ import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,6 +31,9 @@ public class PersonService {
     @Value("${S3_BUCKET_BASE_URL}")
     private String bucketBaseUrl;
 
+    @Value("${S3_BUCKET_NAME}")
+    private String bucketName;
+
 
     private final PersonRepository personRepository;
     private final S3Client s3Client;
@@ -56,7 +58,7 @@ public class PersonService {
     public void saveImage(Long id, MultipartFile imageFile) throws IOException, PersonException {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
-        String bucketName = env.getProperty("S3_BUCKET_NAME");
+
         if (Objects.isNull(imageFile)) {
             throw new IllegalArgumentException("Image file is required");
         }
@@ -125,7 +127,6 @@ public class PersonService {
 
         // Get the content type of the image from S3
 
-        String bucketName = env.getProperty("S3_BUCKET_NAME");
         String keyName = person.getPictureUrl();
 
         HeadObjectRequest objectHead = HeadObjectRequest.builder()
