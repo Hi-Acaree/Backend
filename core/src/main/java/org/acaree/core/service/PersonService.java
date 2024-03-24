@@ -93,13 +93,13 @@ public class PersonService {
             throw new FileNotFoundException("Image not found");
         }
 
-        String keyName = bucketBaseUrl + person.getPictureUrl();
+        String keyName = person.getPictureUrl();
         log.info("Fetching image with key: {}", keyName); // Log the key for debugging
 
         try {
             var response = s3Client.getObjectAsBytes(GetObjectRequest.builder()
                     .bucket(env.getProperty("S3_BUCKET_NAME"))
-                    .key(person.getPictureUrl())
+                    .key(keyName)
                     .build());
             return response.asByteArray();
         } catch (S3Exception e) {
