@@ -11,6 +11,9 @@
 *.rar
 hs_err_pid*
 
+### AWS credntials file ###
+.aws/
+
 ### Maven ###
 target/
 pom.xml.tag

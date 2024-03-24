@@ -24,6 +24,12 @@ public class S3Config {
     @Value("${AWS_REGION}")
     private String region;
 
+    @Value("${AWS_ACCESS_KEY}")
+    private String accessKey;
+
+    @Value("${AWS_SECRET_KEY}")
+    private String secretKey;
+
 
 
 
@@ -32,6 +38,8 @@ public class S3Config {
     public S3Client s3Client(){
         return S3Client.builder()
                 .region(Region.of(region))
+                .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create("accessKey",
+                        "secretKey")))
                 .build();
     }
 }
