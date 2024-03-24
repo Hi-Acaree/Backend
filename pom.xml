@@ -52,6 +52,7 @@
         <maven-checkstyle-plugin.version>3.1.2</maven-checkstyle-plugin.version>
         <maven-javadoc-plugin.version>3.3.0</maven-javadoc-plugin.version>
         <spring-boot-maven-plugin.version>3.2.2</spring-boot-maven-plugin.version>
+        <sts.version>2.17.108</sts.version>
 
 
 </properties>
@@ -188,6 +189,12 @@
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>s3</artifactId>
                 <version>${awSdk.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>sts</artifactId>
+                <version>${sts.version}</version>
             </dependency>
 
 
