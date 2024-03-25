@@ -28,20 +28,19 @@ import java.util.Objects;
 @Service
 @Slf4j
 public class PersonService {
-    @Value("${S3_BUCKET_BASE_URL}")
-    private String bucketBaseUrl;
 
 
     private final PersonRepository personRepository;
     private final S3Client s3Client;
-    private final Environment env;
+
+   @Value("${S3_BUCKET_NAME}")
+    private String bucketName;
 
 
     @Autowired
-    public PersonService(Environment env, PersonRepository personRepository, S3Client s3Client) {
+    public PersonService(PersonRepository personRepository, S3Client s3Client) {
         this.personRepository = personRepository;
         this.s3Client = s3Client;
-        this.env = env;
     }
 
 
@@ -55,7 +54,6 @@ public class PersonService {
     public void saveImage(Long id, MultipartFile imageFile) throws IOException, PersonException {
         Person person = personRepository.findById(id)
                 .orElseThrow(() -> new PersonException("Person not found", ErrorType.PERSON_NOT_FOUND));
-        String bucketName = env.getProperty("S3_BUCKET_NAME");
         if (Objects.isNull(imageFile)) {
             throw new IllegalArgumentException("Image file is required");
         }
@@ -99,7 +97,7 @@ public class PersonService {
 
         try {
             var response = s3Client.getObjectAsBytes(GetObjectRequest.builder()
-                    .bucket(env.getProperty("S3_BUCKET_NAME"))
+                    .bucket(bucketName)
                     .key(keyName)
                     .build());
             return response.asByteArray();
@@ -125,7 +123,6 @@ public class PersonService {
 
         // Get the content type of the image from S3
 
-        String bucketName = env.getProperty("S3_BUCKET_NAME");
         String fullUrl = person.getPictureUrl();
         String keyName = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);
         log.info("Fetching image content type with key: {}", keyName); // Log the key for debugging
