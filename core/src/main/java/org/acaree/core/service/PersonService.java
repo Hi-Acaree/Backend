@@ -6,7 +6,6 @@ import org.acaree.core.repository.PersonRepository;
 import org.acaree.core.util.ErrorType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -91,8 +90,7 @@ public class PersonService {
             throw new FileNotFoundException("Image not found");
         }
 
-        String fullUrl = person.getPictureUrl();
-        String keyName = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);
+        String keyName = person.getPictureUrl();
         log.info("Fetching image with key: {}", keyName); // Log the key for debugging
 
         try {
@@ -123,8 +121,7 @@ public class PersonService {
 
         // Get the content type of the image from S3
 
-        String fullUrl = person.getPictureUrl();
-        String keyName = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);
+        String keyName = person.getPictureUrl();
         log.info("Fetching image content type with key: {}", keyName); // Log the key for debugging
 
         HeadObjectRequest objectHead = HeadObjectRequest.builder()
