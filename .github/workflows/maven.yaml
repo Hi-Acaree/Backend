@@ -60,5 +60,5 @@ jobs:
         run: aws ecs register-task-definition --cli-input-json file://ecs-task-definition.json
 
       - name: Update ECS service
-        run: aws ecs update-service --cluster DevKluster --service acaree-service-new --task-definition my-spring-boot-app
+        run: aws ecs update-service --cluster DevKluster --service acaree-service --task-definition my-spring-boot-app
 
