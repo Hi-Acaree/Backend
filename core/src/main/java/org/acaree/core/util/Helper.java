@@ -1,11 +1,15 @@
 package org.acaree.core.util;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.acaree.core.model.Appointment;
 import org.acaree.core.model.Person;
 import org.acaree.core.model.TimeSlot;
+
+import java.net.URL;
 import java.time.format.DateTimeFormatter;
 
+@Slf4j
 public class Helper {
 
     /**
@@ -48,6 +52,16 @@ public class Helper {
         String endTime = timeSlot != null ? timeSlot.getEndTime().format(timeFormatter) : "null";
 
         return patientId + "_" + doctorId + "_" + startTime + "_" + endTime;
+    }
+
+    public String getRelativePathFromUrl(String fullUrl) {
+        try {
+            URL url = new URL(fullUrl);
+            return url.getPath();
+        } catch (Exception e) {
+            log.error("Failed to parse URL: {}", fullUrl, e);
+            return fullUrl;
+        }
     }
 
 

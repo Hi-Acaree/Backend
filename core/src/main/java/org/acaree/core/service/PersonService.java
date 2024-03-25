@@ -93,7 +93,8 @@ public class PersonService {
             throw new FileNotFoundException("Image not found");
         }
 
-        String keyName = person.getPictureUrl();
+        String fullUrl = person.getPictureUrl();
+        String keyName = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);
         log.info("Fetching image with key: {}", keyName); // Log the key for debugging
 
         try {
@@ -125,7 +126,9 @@ public class PersonService {
         // Get the content type of the image from S3
 
         String bucketName = env.getProperty("S3_BUCKET_NAME");
-        String keyName = person.getPictureUrl();
+        String fullUrl = person.getPictureUrl();
+        String keyName = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);
+        log.info("Fetching image content type with key: {}", keyName); // Log the key for debugging
 
         HeadObjectRequest objectHead = HeadObjectRequest.builder()
                 .bucket(bucketName)
